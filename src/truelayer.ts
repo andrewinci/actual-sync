@@ -2,6 +2,19 @@ import path = require("path");
 import { TruelayerConfig } from "./config";
 import * as fs from "fs/promises";
 
+type TokenResponse = {
+    access_token: string,
+    refresh_token: string,
+}
+
+type CardsResponse = {
+    results: [{
+        display_name: string,
+        account_id: string,
+        card_network: string,
+    }]
+}
+
 export const Truelayer = (config: TruelayerConfig) => {
     const getAuthCode = async (): Promise<string> => {
         const url = `https://auth.truelayer.com/?response_type=code&client_id=${config.clientId}&scope=info%20accounts%20balance%20cards%20transactions%20direct_debits%20standing_orders%20offline_access&redirect_uri=${config.redirectUri}&providers=uk-ob-all%20uk-oauth-all`
@@ -32,10 +45,7 @@ export const Truelayer = (config: TruelayerConfig) => {
                 "code": code,
             })
         })
-        const data = await resp.json() as {
-            access_token: string,
-            refresh_token: string,
-        };
+        const data = await resp.json() as TokenResponse;
         return {
             accessToken: data.access_token,
             refreshToken: data.refresh_token,
@@ -54,10 +64,7 @@ export const Truelayer = (config: TruelayerConfig) => {
                 "refresh_token": refreshToken,
             })
         })
-        const data = await resp.json() as {
-            access_token: string,
-            refresh_token: string,
-        };
+        const data = await resp.json() as TokenResponse;
         return {
             accessToken: data.access_token,
             refreshToken: data.refresh_token,
@@ -66,7 +73,7 @@ export const Truelayer = (config: TruelayerConfig) => {
     const auth = async () => {
         const TOKEN_FILE_PATH = path.join(config.cacheDir, ".refresh_token");
         await fs.mkdir(config.cacheDir, { recursive: true });
-        const creds = fs.readFile(TOKEN_FILE_PATH).then(d => JSON.parse(d.toString())).catch(() => ({}))
+        const creds = await fs.readFile(TOKEN_FILE_PATH).then(d => JSON.parse(d.toString())).catch(() => ({}))
         if ("refreshToken" in creds) {
             return await refreshToken(creds.refreshToken as string)
         } else {
@@ -84,8 +91,10 @@ export const Truelayer = (config: TruelayerConfig) => {
             'Authorization': `Bearer ${tokens.accessToken}`
         }
     }
-    const listAccounts = () => {
-        return []
+    const listAccounts = async () => {
+        const resp = await fetch("https://api.truelayer.com/data/v1/cards/", { headers: await getHeaders() })
+        const body = await resp.json() as CardsResponse;
+        return body.results.map(c => ({ id: c.account_id, name: c.display_name, network: c.card_network }))
     };
 
     return { auth, listAccounts }

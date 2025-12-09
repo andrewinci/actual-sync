@@ -8,14 +8,20 @@ export type AppConfig = {
 export type ActualConfig = {
     syncId: string,
     password: string,
-    url: string
+    url: string,
+    cacheDir: string
+}
+
+export type TruelayerConfig = {
+    
 }
 
 const DEFAULT_CONFIG: AppConfig = {
     actual: {
         password: "",
         syncId: "",
-        url: "localhost"
+        url: "localhost",
+        cacheDir: ".cache"
     }
 };
 

@@ -2,7 +2,8 @@ import { readFile, writeFile } from "fs/promises"
 import { parse, stringify } from "yaml"
 
 export type AppConfig = {
-    actual: ActualConfig
+    actual: ActualConfig,
+    truelayer: TruelayerConfig
 }
 
 export type ActualConfig = {
@@ -13,7 +14,10 @@ export type ActualConfig = {
 }
 
 export type TruelayerConfig = {
-    
+    clientId: string,
+    clientSecret: string,
+    redirectUri: string,
+    cacheDir: string
 }
 
 const DEFAULT_CONFIG: AppConfig = {
@@ -21,13 +25,24 @@ const DEFAULT_CONFIG: AppConfig = {
         password: "",
         syncId: "",
         url: "localhost",
-        cacheDir: ".cache"
+        cacheDir: ".cache/actual/"
+    },
+    truelayer: {
+        redirectUri: "https://console.truelayer.com/redirect-page",
+        cacheDir: ".cache/truelayer/",
+        clientId: "",
+        clientSecret: ""
     }
 };
 
 const CONFIG_FILE_NAME = ".config.yml"
 export const loadConfig = async (): Promise<AppConfig> => {
-    return readFile(CONFIG_FILE_NAME).then(d => parse(d.toString())).catch(() => DEFAULT_CONFIG);
+    const config: AppConfig = await readFile(CONFIG_FILE_NAME).then(d => parse(d.toString())).catch(() => DEFAULT_CONFIG);
+    // merge with default
+    return ({
+        actual: { ...DEFAULT_CONFIG.actual, ...config?.actual },
+        truelayer: { ...DEFAULT_CONFIG.truelayer, ...config?.truelayer },
+    })
 }
 
 export const writeConfig = async (config: AppConfig) => {

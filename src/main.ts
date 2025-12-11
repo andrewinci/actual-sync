@@ -63,4 +63,16 @@ truelayerCommand.command("list-accounts").action(async () => {
     const config = await loadConfig()
     console.log(JSON.stringify(config.truelayer.accounts, null, 2));
 });
+truelayerCommand.command("list-transactions").argument("accountId").action(async (accountId) => {
+    const config = await loadConfig()
+    const account = config.truelayer.accounts.find(a => a.id === accountId);
+    if (account) {
+        const truelayer = Truelayer(config.truelayer);
+        const transactions = await truelayer.getTransactions(account)
+        console.log(JSON.stringify(transactions, null, 2));
+    } else {
+        console.log(chalk.red("The account doesn't exists. Check the id and make sure the account is added first"));
+    }
+});
+
 program.parse(process.argv);

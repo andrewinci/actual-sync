@@ -1,5 +1,19 @@
 import path = require("path");
-import { TruelayerConfig } from "./config";
+
+export type TruelayerConfig = {
+    clientId: string,
+    clientSecret: string,
+    redirectUri: string,
+    cacheDir: string
+    accounts: TruelayerBankAccount[]
+}
+
+export type TruelayerBankAccount = {
+    id: string,
+    name: string,
+    network: string,
+    refreshToken: string,
+}
 
 type TokenResponse = {
     access_token: string,
@@ -11,14 +25,40 @@ type CardsResponse = {
         display_name: string,
         account_id: string,
         card_network: string,
-    }]
+    }],
+    status: "Succeeded"
+}
+
+type TransactionsResponse = {
+    results:
+    {
+        "timestamp": string, // "2025-09-14T00:00:00Z"
+        "description": string,
+        "transaction_type": string,
+        "transaction_category": string,
+        "transaction_classification": [],
+        "amount": number, // 8.98
+        "currency": string, // "GBP",
+        "transaction_id": string,
+        "provider_transaction_id": string,
+        "normalised_provider_transaction_id": string,
+        "meta": {
+            "provider_reference": string,
+            "provider_merchant_name": string,
+            "address": string,
+            "transaction_type": string,
+            "provider_id": string
+        }
+    },
+    status: "Succeeded"
 }
 
 export const Truelayer = (config: TruelayerConfig) => {
-    const BASE_URL = "https://auth.truelayer.com/"
+    const BASE_URL_AUTH = "https://auth.truelayer.com"
+    const BASE_URL_API = "https://api.truelayer.com"
     // auth
     const getAuthCode = async (): Promise<string> => {
-        const u = new URL(BASE_URL)
+        const u = new URL(BASE_URL_AUTH)
         u.searchParams.append("response_type", "code");
         u.searchParams.append("client_id", config.clientId);
         u.searchParams.append("scope", "info accounts balance cards transactions direct_debits standing_orders offline_access");
@@ -37,7 +77,7 @@ export const Truelayer = (config: TruelayerConfig) => {
         })
     }
     const swapCodeForTokens = async (code: string) => {
-        const resp = await fetch(new URL("/connect/token", BASE_URL), {
+        const resp = await fetch(new URL("/connect/token", BASE_URL_AUTH), {
             method: "POST",
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -55,7 +95,7 @@ export const Truelayer = (config: TruelayerConfig) => {
         }
     }
     const refreshToken = async (refreshToken: string) => {
-        const resp = await fetch(new URL("/connect/token", BASE_URL), {
+        const resp = await fetch(new URL("/connect/token", BASE_URL_AUTH), {
             method: "POST",
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -73,7 +113,7 @@ export const Truelayer = (config: TruelayerConfig) => {
     }
     // account
     const getCardInfo = async (accessToken: string) => {
-        const resp = await fetch("https://api.truelayer.com/data/v1/cards/", {
+        const resp = await fetch(new URL(`data/v1/cards/`, BASE_URL_API), {
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${accessToken}`
@@ -83,7 +123,7 @@ export const Truelayer = (config: TruelayerConfig) => {
         if (body.results.length != 1) throw new Error("Only one result expected");
         return body.results.map(c => ({ id: c.account_id, name: c.display_name, network: c.card_network }))[0]!;
     }
-    const addAccount = async () => {
+    const addAccount = async (): Promise<TruelayerBankAccount> => {
         const code = await getAuthCode();
         const creds = await swapCodeForTokens(code);
         const card = await getCardInfo(creds.accessToken);
@@ -94,5 +134,16 @@ export const Truelayer = (config: TruelayerConfig) => {
             refreshToken: creds.refreshToken,
         })
     }
-    return { addAccount }
+    const getTransactions = async (account: TruelayerBankAccount) => {
+        const creds = await refreshToken(account.refreshToken);
+        const resp = await fetch(new URL(`/data/v1/cards/${account.id}/transactions`, BASE_URL_API), {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${creds.accessToken}`
+            }
+        })
+        const body = await resp.json() as TransactionsResponse;
+        return body.results;
+    };
+    return { addAccount, getTransactions }
 };

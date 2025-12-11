@@ -1,29 +1,12 @@
 import { readFile, writeFile } from "fs/promises"
 import { parse, stringify } from "yaml"
+import { TruelayerConfig } from "./truelayer"
+import { ActualConfig } from "./actual"
 
 export type AppConfig = {
     actual: ActualConfig,
     truelayer: TruelayerConfig
 }
-
-export type ActualConfig = {
-    syncId: string,
-    password: string,
-    url: string,
-    cacheDir: string
-}
-
-export type TruelayerConfig = {
-    clientId: string,
-    clientSecret: string,
-    redirectUri: string,
-    cacheDir: string
-    accounts: {
-        id: string,
-        refreshToken: string,
-    }[]
-}
-
 const DEFAULT_CONFIG: AppConfig = {
     actual: {
         password: "",

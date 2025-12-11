@@ -1,6 +1,13 @@
-import { ActualConfig } from "./config";
 import * as api from "@actual-app/api";
 import { mkdir } from "fs/promises";
+
+export type ActualConfig = {
+    syncId: string,
+    password: string,
+    url: string,
+    cacheDir: string
+}
+
 
 export const Actual = (config: ActualConfig) => {
     const setup = async () => {

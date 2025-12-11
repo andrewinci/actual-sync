@@ -1,6 +1,5 @@
 import path = require("path");
 import { TruelayerConfig } from "./config";
-import * as fs from "fs/promises";
 
 type TokenResponse = {
     access_token: string,
@@ -16,10 +15,16 @@ type CardsResponse = {
 }
 
 export const Truelayer = (config: TruelayerConfig) => {
+    const BASE_URL = "https://auth.truelayer.com/"
+    // auth
     const getAuthCode = async (): Promise<string> => {
-        const url = `https://auth.truelayer.com/?response_type=code&client_id=${config.clientId}&scope=info%20accounts%20balance%20cards%20transactions%20direct_debits%20standing_orders%20offline_access&redirect_uri=${config.redirectUri}&providers=uk-ob-all%20uk-oauth-all`
-        console.log("Navigate to:");
-        console.log(url);
+        const u = new URL(BASE_URL)
+        u.searchParams.append("response_type", "code");
+        u.searchParams.append("client_id", config.clientId);
+        u.searchParams.append("scope", "info accounts balance cards transactions direct_debits standing_orders offline_access");
+        u.searchParams.append("redirect_uri", config.redirectUri);
+        u.searchParams.append("providers", "uk-ob-all uk-oauth-all");
+        console.log(`Navigate to:\n${u.toString()}`);
         const readline = require('readline').createInterface({
             input: process.stdin,
             output: process.stdout
@@ -32,11 +37,9 @@ export const Truelayer = (config: TruelayerConfig) => {
         })
     }
     const swapCodeForTokens = async (code: string) => {
-        const resp = await fetch("https://auth.truelayer.com/connect/token", {
+        const resp = await fetch(new URL("/connect/token", BASE_URL), {
             method: "POST",
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 "grant_type": "authorization_code",
                 "client_id": config.clientId,
@@ -52,11 +55,9 @@ export const Truelayer = (config: TruelayerConfig) => {
         }
     }
     const refreshToken = async (refreshToken: string) => {
-        const resp = await fetch("https://auth.truelayer.com/connect/token", {
+        const resp = await fetch(new URL("/connect/token", BASE_URL), {
             method: "POST",
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 "grant_type": "refresh_token",
                 "client_id": config.clientId,
@@ -70,32 +71,28 @@ export const Truelayer = (config: TruelayerConfig) => {
             refreshToken: data.refresh_token,
         }
     }
-    const auth = async () => {
-        const TOKEN_FILE_PATH = path.join(config.cacheDir, ".refresh_token");
-        await fs.mkdir(config.cacheDir, { recursive: true });
-        const creds = await fs.readFile(TOKEN_FILE_PATH).then(d => JSON.parse(d.toString())).catch(() => ({}))
-        if ("refreshToken" in creds) {
-            return await refreshToken(creds.refreshToken as string)
-        } else {
-            const code = await getAuthCode()
-            console.log(code)
-            const tokens = await swapCodeForTokens(code);
-            fs.writeFile(TOKEN_FILE_PATH, JSON.stringify({ refreshToken: tokens.refreshToken }));
-            return tokens;
-        }
-    }
-    const getHeaders = async () => {
-        const tokens = await auth();
-        return {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${tokens.accessToken}`
-        }
-    }
-    const listAccounts = async () => {
-        const resp = await fetch("https://api.truelayer.com/data/v1/cards/", { headers: await getHeaders() })
+    // account
+    const getCardInfo = async (accessToken: string) => {
+        const resp = await fetch("https://api.truelayer.com/data/v1/cards/", {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${accessToken}`
+            }
+        })
         const body = await resp.json() as CardsResponse;
-        return body.results.map(c => ({ id: c.account_id, name: c.display_name, network: c.card_network }))
-    };
-
-    return { auth, listAccounts }
+        if (body.results.length != 1) throw new Error("Only one result expected");
+        return body.results.map(c => ({ id: c.account_id, name: c.display_name, network: c.card_network }))[0]!;
+    }
+    const addAccount = async () => {
+        const code = await getAuthCode();
+        const creds = await swapCodeForTokens(code);
+        const card = await getCardInfo(creds.accessToken);
+        return ({
+            id: card.id,
+            name: card.name,
+            network: card.network,
+            refreshToken: creds.refreshToken,
+        })
+    }
+    return { addAccount }
 };

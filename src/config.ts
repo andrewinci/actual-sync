@@ -18,6 +18,10 @@ export type TruelayerConfig = {
     clientSecret: string,
     redirectUri: string,
     cacheDir: string
+    accounts: {
+        id: string,
+        refreshToken: string,
+    }[]
 }
 
 const DEFAULT_CONFIG: AppConfig = {
@@ -31,7 +35,8 @@ const DEFAULT_CONFIG: AppConfig = {
         redirectUri: "https://console.truelayer.com/redirect-page",
         cacheDir: ".cache/truelayer/",
         clientId: "",
-        clientSecret: ""
+        clientSecret: "",
+        accounts: [],
     }
 };
 

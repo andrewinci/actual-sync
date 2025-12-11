@@ -42,20 +42,25 @@ truelayerCommand.command("config").action(async () => {
         { type: "input", name: "redirectUri", default: actualConfig.redirectUri, message: "Truelayer app redirect uri" },
         { type: "input", name: "cacheDir", default: actualConfig.cacheDir, message: "Local dir for cache" },
     ]).then(async (answers) => {
-        await writeConfig({ ...config, truelayer: answers })
+        await writeConfig({ ...config, truelayer: { ...answers, accounts: [] } })
         console.log(chalk.green("Truelayer configuration updated"));
     })
 });
 truelayerCommand.command("add-account").action(async () => {
     const config = await loadConfig()
     const truelayer = Truelayer(config.truelayer);
-    await truelayer.auth();
-    console.log(chalk.green("Account added and auth setup"));
+    const account = await truelayer.addAccount();
+    const accountAlreadyExists = config.truelayer.accounts.find(a => a.id == account.id)
+    if (!accountAlreadyExists) {
+        await writeConfig({ ...config, truelayer: { ...config.truelayer, accounts: [...config.truelayer.accounts, account] } })
+        console.log(account);
+        console.log(chalk.green("Account added and auth setup"));
+    } else {
+        console.log(chalk.red("Account already exists"));
+    }
 });
 truelayerCommand.command("list-accounts").action(async () => {
     const config = await loadConfig()
-    const truelayer = Truelayer(config.truelayer);
-    const accounts = await truelayer.listAccounts();
-    console.log(JSON.stringify(accounts, null, 2));
+    console.log(JSON.stringify(config.truelayer.accounts, null, 2));
 });
 program.parse(process.argv);

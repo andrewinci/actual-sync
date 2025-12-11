@@ -9,6 +9,8 @@ export type ActualConfig = {
 };
 
 export type ActualTransaction = {
+  /** Required. The ID of the account this transaction belongs to */
+  account: string;
   /** Required. Transaction date in YYYY-MM-DD format */
   date: string;
   /** A currency amount as an integer representing the value without decimal places.
@@ -23,11 +25,8 @@ export type ActualTransaction = {
   /** A unique id usually given by the bank, if importing.
    * Use this to avoid duplicate transactions */
   imported_id: string;
-  /** If a transfer, the id of the corresponding transaction in the other account.
-   * You should not change this for existing transfers.
-   * Only set this when importing */
-  // transfer_id?: string;
-  //todo
+  /** A flag indicating if the transaction has cleared or not */
+  cleared?: boolean;
 };
 
 export const Actual = (config: ActualConfig) => {
@@ -58,7 +57,13 @@ export const Actual = (config: ActualConfig) => {
   ) => {
     try {
       await setup();
-      await api.addTransactions(accountId, txs);
+      const res = await api.importTransactions(accountId, txs);
+      return {
+        errors: (res.errors as []).length,
+        added: (res.added as []).length,
+        updated: (res.updated as []).length,
+        updatedPreview: (res.updatedPreview as []).length,
+      }
     } finally {
       await api.shutdown();
     }

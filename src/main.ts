@@ -6,6 +6,7 @@ import inquirer from "inquirer";
 import { loadConfig, writeConfig } from "./config";
 import { Actual } from "./actual";
 import { Truelayer } from "./truelayer";
+import { Sync } from "./sync";
 
 program.version("1.0.0").description("TA sync - Truelayer to Actual sync");
 
@@ -113,7 +114,8 @@ truelayerCommand.command("add-account").action(async () => {
 });
 truelayerCommand.command("list-accounts").action(async () => {
   const config = await loadConfig();
-  console.log(JSON.stringify(config.truelayer.accounts, null, 2));
+  const truelayer = Truelayer(config.truelayer);
+  console.log(JSON.stringify(truelayer.listAccounts(), null, 2));
 });
 truelayerCommand
   .command("list-transactions")
@@ -153,4 +155,8 @@ truelayerCommand
     }
   });
 
+program.command("sync").action(async () => {
+  const config = await loadConfig();
+  await Sync(config).sync();
+});
 program.parse(process.argv);

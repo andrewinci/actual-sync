@@ -2,10 +2,12 @@ import { readFile, writeFile } from "fs/promises";
 import { parse, stringify } from "yaml";
 import { TruelayerConfig } from "./truelayer";
 import { ActualConfig } from "./actual";
+import { SyncConfig } from "./sync";
 
 export type AppConfig = {
   actual: ActualConfig;
   truelayer: TruelayerConfig;
+  sync: SyncConfig;
 };
 const DEFAULT_CONFIG: AppConfig = {
   actual: {
@@ -21,9 +23,13 @@ const DEFAULT_CONFIG: AppConfig = {
     clientSecret: "",
     accounts: [],
   },
+  sync: {
+    map: [],
+  },
 };
 
 const CONFIG_FILE_NAME = ".config.yml";
+
 export const loadConfig = async (): Promise<AppConfig> => {
   const config: AppConfig = await readFile(CONFIG_FILE_NAME)
     .then((d) => parse(d.toString()))
@@ -32,6 +38,7 @@ export const loadConfig = async (): Promise<AppConfig> => {
   return {
     actual: { ...DEFAULT_CONFIG.actual, ...config?.actual },
     truelayer: { ...DEFAULT_CONFIG.truelayer, ...config?.truelayer },
+    sync: { ...DEFAULT_CONFIG.sync, ...config?.sync },
   };
 };
 

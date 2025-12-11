@@ -36,18 +36,17 @@ export type TruelayerTransaction = {
   description: string;
   transaction_type: string;
   transaction_category: string;
-  transaction_classification: [];
   amount: number; // 8.98
   currency: string; // "GBP",
   transaction_id: string;
-  provider_transaction_id: string;
-  normalised_provider_transaction_id: string;
+  provider_transaction_id?: string;
+  normalised_provider_transaction_id?: string;
   meta: {
-    provider_reference: string;
     provider_merchant_name: string;
     address: string;
     transaction_type: string;
-    provider_id: string;
+    provider_reference?: string;
+    provider_id?: string;
   };
 };
 type TransactionsResponse = {
@@ -117,6 +116,9 @@ export const Truelayer = (config: TruelayerConfig) => {
     };
   };
   // account
+  const listAccounts = () => {
+    return config.accounts;
+  };
   const getCardInfo = async (accessToken: string) => {
     const resp = await fetch(new URL(`data/v1/cards/`, BASE_URL_API), {
       headers: {
@@ -170,5 +172,5 @@ export const Truelayer = (config: TruelayerConfig) => {
     );
     return await resp.json();
   };
-  return { addAccount, getTransactions, getBalance };
+  return { addAccount, getTransactions, getBalance, listAccounts };
 };

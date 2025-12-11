@@ -31,26 +31,27 @@ type CardsResponse = {
   status: "Succeeded";
 };
 
-type TransactionsResponse = {
-  results: {
-    timestamp: string; // "2025-09-14T00:00:00Z"
-    description: string;
+export type TruelayerTransaction = {
+  timestamp: string; // "2025-09-14T00:00:00Z"
+  description: string;
+  transaction_type: string;
+  transaction_category: string;
+  transaction_classification: [];
+  amount: number; // 8.98
+  currency: string; // "GBP",
+  transaction_id: string;
+  provider_transaction_id: string;
+  normalised_provider_transaction_id: string;
+  meta: {
+    provider_reference: string;
+    provider_merchant_name: string;
+    address: string;
     transaction_type: string;
-    transaction_category: string;
-    transaction_classification: [];
-    amount: number; // 8.98
-    currency: string; // "GBP",
-    transaction_id: string;
-    provider_transaction_id: string;
-    normalised_provider_transaction_id: string;
-    meta: {
-      provider_reference: string;
-      provider_merchant_name: string;
-      address: string;
-      transaction_type: string;
-      provider_id: string;
-    };
+    provider_id: string;
   };
+};
+type TransactionsResponse = {
+  results: TruelayerTransaction[];
   status: "Succeeded";
 };
 
@@ -156,5 +157,18 @@ export const Truelayer = (config: TruelayerConfig) => {
     const body = (await resp.json()) as TransactionsResponse;
     return body.results;
   };
-  return { addAccount, getTransactions };
+  const getBalance = async (account: TruelayerBankAccount) => {
+    const creds = await refreshToken(account.refreshToken);
+    const resp = await fetch(
+      new URL(`/data/v1/cards/${account.id}/balance`, BASE_URL_API),
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${creds.accessToken}`,
+        },
+      },
+    );
+    return await resp.json();
+  };
+  return { addAccount, getTransactions, getBalance };
 };

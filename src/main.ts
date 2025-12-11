@@ -134,4 +134,23 @@ truelayerCommand
     }
   });
 
+truelayerCommand
+  .command("get-balance")
+  .argument("accountId")
+  .action(async (accountId) => {
+    const config = await loadConfig();
+    const account = config.truelayer.accounts.find((a) => a.id === accountId);
+    if (account) {
+      const truelayer = Truelayer(config.truelayer);
+      const balance = await truelayer.getBalance(account);
+      console.log(JSON.stringify(balance, null, 2));
+    } else {
+      console.log(
+        chalk.red(
+          "The account doesn't exists. Check the id and make sure the account is added first",
+        ),
+      );
+    }
+  });
+
 program.parse(process.argv);

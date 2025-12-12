@@ -1,0 +1,60 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: actual-sync
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  schedule: {{ .Values.cronjob.schedule | quote }}
+  timeZone: {{ .Values.cronjob.timeZone | quote }}
+  concurrencyPolicy: {{ .Values.cronjob.concurrencyPolicy }}
+  successfulJobsHistoryLimit: {{ .Values.cronjob.successfulJobsHistoryLimit }}
+  failedJobsHistoryLimit: {{ .Values.cronjob.failedJobsHistoryLimit }}
+  jobTemplate:
+    spec:
+      backoffLimit: {{ .Values.cronjob.backoffLimit }}
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: actual-sync
+            app.kubernetes.io/instance: {{ .Release.Name }}
+        spec:
+          restartPolicy: OnFailure
+          serviceAccountName: {{ .Release.Name }}-sa
+          containers:
+          - name: actual-sync
+            image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+            imagePullPolicy: {{ .Values.image.pullPolicy }}
+            command: ["/app/actual-sync"]
+            args: ["sync"]
+            env:
+            - name: CONFIG_FILE_PATH
+              value: "/config/.config.yml"
+            - name: TZ
+              value: {{ .Values.cronjob.timeZone | quote }}
+            volumeMounts:
+            - name: config
+              mountPath: /config
+              readOnly: true
+            - name: cache
+              mountPath: /tmp/.cache
+            resources:
+              requests:
+                memory: {{ .Values.resources.requests.memory | quote }}
+                cpu: {{ .Values.resources.requests.cpu | quote }}
+              limits:
+                memory: {{ .Values.resources.limits.memory | quote }}
+                cpu: {{ .Values.resources.limits.cpu | quote }}
+          volumes:
+          - name: config
+            configMap:
+              {{- if .Values.existingConfigMap }}
+              name: {{ .Values.existingConfigMap }}
+              {{- else }}
+              name: {{ .Release.Name }}-config
+              {{- end }}
+              defaultMode: 0644
+          - name: cache
+            emptyDir: {}

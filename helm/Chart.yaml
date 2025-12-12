@@ -1,0 +1,17 @@
+apiVersion: v2
+name: actual-sync
+description: A Helm chart for Actual Sync - automated bank transaction syncing to Actual Budget
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - actual-budget
+  - banking
+  - finance
+  - sync
+home: https://github.com/andrewinci/actual-sync
+sources:
+  - https://github.com/andrewinci/actual-sync
+maintainers:
+  - name: andrewinci
+    url: https://github.com/andrewinci

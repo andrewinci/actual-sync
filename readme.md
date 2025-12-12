@@ -154,6 +154,36 @@ sync:
       mapConfig: {}
 ```
 
+## 🚀 Deployment
+
+### ☸️ Kubernetes with Helm
+
+The easiest way to deploy actual-sync to Kubernetes is using the included Helm chart. The deployment creates a CronJob that automatically syncs your bank transactions every 4 hours.
+
+#### Prerequisites
+- Kubernetes cluster
+- Helm 3.x installed
+- A `.config.yml` file with your credentials
+
+#### Installation
+
+1. **Deploy using your local configuration file:**
+   ```bash
+   # Create namespace and install with your config
+   helm upgrade --install actual-sync ./helm \
+     --set config.create=true \
+     --set-file config.data=.config.yml \
+     -n actual-sync --create-namespace
+   ```
+
+2. **Or use an existing ConfigMap:**
+   ```bash
+   # If you already have a ConfigMap named 'my-config'
+   helm upgrade --install actual-sync ./helm \
+     --set existingConfigMap=my-config \
+     -n actual-sync --create-namespace
+   ```
+
 ## 🔧 Development
 
 ### Setup

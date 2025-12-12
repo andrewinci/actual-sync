@@ -1,0 +1,40 @@
+# Minimal values for actual-sync
+
+image:
+  repository: ghcr.io/andrewinci/actual-sync
+  tag: latest
+  pullPolicy: IfNotPresent
+
+cronjob:
+  schedule: "0 */4 * * *"
+  timeZone: UTC
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  backoffLimit: 2
+
+resources:
+  requests:
+    memory: 64Mi
+    cpu: 50m
+  limits:
+    memory: 256Mi
+    cpu: 200m
+
+config:
+  create: true
+  data: |
+    actual:
+      password: your-actual-password
+      syncId: your-sync-id
+      url: https://your-actual-server.com
+      cacheDir: /tmp/.cache/
+    truelayer:
+      redirectUri: https://console.truelayer.com/redirect-page
+      clientId: your-truelayer-client-id
+      clientSecret: your-truelayer-client-secret
+      accounts: []
+    sync:
+      map: []
+# Optional: use existing configMap
+# existingConfigMap: my-existing-configmap

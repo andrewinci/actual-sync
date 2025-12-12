@@ -2,7 +2,6 @@ export type TruelayerConfig = {
   clientId: string;
   clientSecret: string;
   redirectUri: string;
-  cacheDir: string;
   accounts: TruelayerBankAccount[];
 };
 

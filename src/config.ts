@@ -14,11 +14,10 @@ const DEFAULT_CONFIG: AppConfig = {
     password: "<actual password>",
     syncId: "<sync id from https://..../settings >",
     url: "localhost",
-    cacheDir: ".cache/actual/",
+    cacheDir: ".cache/",
   },
   truelayer: {
     redirectUri: "https://console.truelayer.com/redirect-page",
-    cacheDir: ".cache/truelayer/",
     clientId: "<truelayer app clientID>",
     clientSecret: "<truelayer app secretId>",
     accounts: [],

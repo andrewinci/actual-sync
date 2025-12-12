@@ -41,6 +41,7 @@ export const loadConfig = async (): Promise<AppConfig> => {
     sync: { ...DEFAULT_CONFIG.sync, ...config?.sync },
   };
 };
-export const createConfig = async () => writeFile(CONFIG_FILE_NAME, stringify(DEFAULT_CONFIG)).catch((err) =>
-  console.error(err),
-);
+export const createConfig = async () =>
+  writeFile(CONFIG_FILE_NAME, stringify(DEFAULT_CONFIG)).catch((err) =>
+    console.error(err),
+  );

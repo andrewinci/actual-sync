@@ -11,12 +11,22 @@ import { Sync } from "./sync";
 
 program.version("1.0.0").description("TA sync - Truelayer to Actual sync");
 
-// Config 
-program.command("config").command("create").action(() => {
-  inquirer
-    .prompt({ type: 'confirm', name: "confirm", message: 'Create default config file? (if a file exists it will be overwritten)' })
-    .then(({ confirm }) => { if (confirm) createConfig() })
-})
+// Config
+program
+  .command("config")
+  .command("create")
+  .action(() => {
+    inquirer
+      .prompt({
+        type: "confirm",
+        name: "confirm",
+        message:
+          "Create default config file? (if a file exists it will be overwritten)",
+      })
+      .then(({ confirm }) => {
+        if (confirm) createConfig();
+      });
+  });
 // Actual
 const actualCommand = program.command("actual");
 actualCommand.command("list-accounts").action(async () => {
@@ -32,7 +42,9 @@ truelayerCommand.command("add-account").action(async () => {
   const config = await loadConfig();
   const truelayer = Truelayer(config.truelayer);
   const accounts = await truelayer.addAccounts();
-  console.log(chalk.green("Update your truelayer config with the following accounts"));
+  console.log(
+    chalk.green("Update your truelayer config with the following accounts"),
+  );
   console.log(YAML.stringify(accounts));
 });
 truelayerCommand.command("list-accounts").action(async () => {

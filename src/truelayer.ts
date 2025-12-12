@@ -44,7 +44,8 @@ type TokenResponse = {
 
 export const Truelayer = (config: TruelayerConfig) => {
   const BASE_URL_API = "https://api.truelayer.com";
-  const { getAuthCode, refreshToken, swapCodeForTokens } = TruelayerAuth(config);
+  const { getAuthCode, refreshToken, swapCodeForTokens } =
+    TruelayerAuth(config);
 
   const listAccounts = () => config.accounts;
 
@@ -62,26 +63,28 @@ export const Truelayer = (config: TruelayerConfig) => {
     }));
   };
 
-  const truelayerApi = async <T>(path: string, opts: { refreshToken: string } | { accessToken: string }): Promise<TruelayerResponse<T>> => {
+  const truelayerApi = async <T>(
+    path: string,
+    opts: { refreshToken: string } | { accessToken: string },
+  ): Promise<TruelayerResponse<T>> => {
     let accessToken = "";
     if ("accessToken" in opts) accessToken = opts.accessToken;
     else {
       const creds = await refreshToken(opts.refreshToken);
       accessToken = creds.accessToken;
     }
-    const resp = await fetch(
-      new URL(path, BASE_URL_API),
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
+    const resp = await fetch(new URL(path, BASE_URL_API), {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
       },
-    );
+    });
     return (await resp.json()) as TruelayerResponse<T>;
-  }
+  };
 
-  const getInfo = async (opts: { refreshToken: string } | { accessToken: string }) => {
+  const getInfo = async (
+    opts: { refreshToken: string } | { accessToken: string },
+  ) => {
     type CardAccountResponse = {
       display_name: string;
       account_id: string;
@@ -101,26 +104,30 @@ export const Truelayer = (config: TruelayerConfig) => {
       network: c.card_network,
       type: isCard ? "CARD" : "ACCOUNT",
     }));
-  }
+  };
 
   const getTransactions = async (account: TruelayerBankAccount) => {
-    return await truelayerApi<TruelayerTransaction>(account.type === "CARD"
-      ? `/data/v1/cards/${account.id}/transactions`
-      : `/data/v1/accounts/${account.id}/transactions`, account).then(res => res.results);
+    return await truelayerApi<TruelayerTransaction>(
+      account.type === "CARD"
+        ? `/data/v1/cards/${account.id}/transactions`
+        : `/data/v1/accounts/${account.id}/transactions`,
+      account,
+    ).then((res) => res.results);
   };
 
   const getBalance = async (account: TruelayerBankAccount) => {
-    const data = await truelayerApi<{ current: number }>(account.type === "CARD"
-      ? `/data/v1/cards/${account.id}/balance`
-      : `/data/v1/accounts/${account.id}/balance`, account);
+    const data = await truelayerApi<{ current: number }>(
+      account.type === "CARD"
+        ? `/data/v1/cards/${account.id}/balance`
+        : `/data/v1/accounts/${account.id}/balance`,
+      account,
+    );
     if (data.results.length !== 1)
       throw Error("Only one budget per account expected");
     return data.results[0];
   };
   return { addAccounts, getTransactions, getBalance, listAccounts };
 };
-
-
 
 const TruelayerAuth = (config: TruelayerConfig) => {
   const BASE_URL_AUTH = "https://auth.truelayer.com";

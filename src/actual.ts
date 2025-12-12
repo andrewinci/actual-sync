@@ -68,5 +68,14 @@ export const Actual = (config: ActualConfig) => {
       await api.shutdown();
     }
   };
-  return { listAccounts, loadTransactions };
+
+  const getBalance = async (accountId: string) => {
+    try {
+      await setup();
+      return await api.getAccountBalance(accountId);
+    } finally {
+      await api.shutdown();
+    }
+  };
+  return { listAccounts, loadTransactions, getBalance };
 };

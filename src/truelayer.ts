@@ -15,19 +15,22 @@ export type TruelayerBankAccount = {
   type: "CARD" | "ACCOUNT";
 };
 
+type TruelayerResponse<T> = {
+  results: T[]
+  status: "Succeeded";
+}
+
 type TokenResponse = {
   access_token: string;
   refresh_token: string;
 };
 
-type CardsResponse = {
-  results: {
-    display_name: string;
-    account_id: string;
-    card_network: string;
-  }[];
-  status: "Succeeded";
-};
+type CardAccountResponse = TruelayerResponse<{
+  display_name: string;
+  account_id: string;
+  card_network: string;
+}>;
+
 
 export type TruelayerTransaction = {
   timestamp: string; // "2025-09-14T00:00:00Z"
@@ -129,7 +132,7 @@ export const Truelayer = (config: TruelayerConfig) => {
         },
       },
     );
-    const body = (await resp.json()) as CardsResponse;
+    const body = (await resp.json()) as CardAccountResponse;
     return body.results.map((c) => ({
       id: c.account_id,
       name: c.display_name,
@@ -192,7 +195,9 @@ export const Truelayer = (config: TruelayerConfig) => {
         },
       },
     );
-    return await resp.json();
+    const data = await resp.json() as TruelayerResponse<{current: number}>;
+    if (data.results.length !== 1) throw Error("Only one budget per account expected");
+    return data.results[0];
   };
   return { addAccounts, getTransactions, getBalance, listAccounts };
 };

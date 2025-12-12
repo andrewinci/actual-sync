@@ -67,10 +67,21 @@ export const Sync = (config: AppConfig) => {
         syncConfig.actualAccountId,
         actualTransactions,
       );
+      console.log(chalk.green("Sync result"));
       console.log(YAML.stringify(report, null, 2));
-      console.log(chalk.green("Balance"));
-      const balance = await truelayer.getBalance(truelayerAccount);
-      console.log(YAML.stringify(balance, null, 2));
+      // verify balances
+      const truelayerBalance = await truelayer.getBalance(truelayerAccount)
+      const actualBalance = await actual.getBalance(actualAccount.id);
+      const sign = truelayerAccount.type === "CARD" ? -1 : 1;
+      if (truelayerBalance?.current === (actualBalance / 100) * sign)
+        console.log(chalk.green(`Account balances match`));
+      else {
+        console.log(chalk.red(`Account balances DO NOT match`));
+        console.log(chalk.green("\nOnline balance"));
+        console.log(YAML.stringify(truelayerBalance, null, 2));
+        console.log(chalk.green("\nActual balance"));
+        console.log(actualBalance / 100);
+      }
     }
   };
 

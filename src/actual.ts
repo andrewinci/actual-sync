@@ -30,33 +30,35 @@ export type ActualTransaction = {
 };
 
 export const Actual = (config: ActualConfig) => {
-  const setup = async () => {
-    await mkdir(config.cacheDir, { recursive: true });
-    await api.init({
-      dataDir: config.cacheDir,
-      serverURL: config.url,
-      password: config.password,
-      verbose: false,
-    });
-    await api.downloadBudget(config.syncId);
-  };
-
-  const listAccounts = async () => {
+  const safeActualFn = async <T>(fn: () => T) => {
     try {
-      await setup();
-      const accounts = await api.getAccounts();
-      return accounts.map((a) => ({ name: a.name, id: a.id }));
+      // setup
+      await mkdir(config.cacheDir, { recursive: true });
+      await api.init({
+        dataDir: config.cacheDir,
+        serverURL: config.url,
+        password: config.password,
+        verbose: false,
+      });
+      await api.downloadBudget(config.syncId);
+      // client api call
+      return fn();
     } finally {
       await api.shutdown();
     }
   };
 
+  const listAccounts = () =>
+    safeActualFn(async () => {
+      const accounts = await api.getAccounts();
+      return accounts.map((a) => ({ name: a.name, id: a.id }));
+    });
+
   const loadTransactions = async (
     accountId: string,
     txs: ActualTransaction[],
-  ) => {
-    try {
-      await setup();
+  ) =>
+    safeActualFn(async () => {
       const res = await api.importTransactions(accountId, txs);
       return {
         errors: (res.errors as []).length,
@@ -64,18 +66,11 @@ export const Actual = (config: ActualConfig) => {
         updated: (res.updated as []).length,
         updatedPreview: (res.updatedPreview as []).length,
       };
-    } finally {
-      await api.shutdown();
-    }
-  };
+    });
 
-  const getBalance = async (accountId: string) => {
-    try {
-      await setup();
+  const getBalance = async (accountId: string) =>
+    safeActualFn(async () => {
       return await api.getAccountBalance(accountId);
-    } finally {
-      await api.shutdown();
-    }
-  };
+    });
   return { listAccounts, loadTransactions, getBalance };
 };

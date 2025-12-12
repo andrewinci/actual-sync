@@ -70,7 +70,7 @@ export const Sync = (config: AppConfig) => {
       console.log(chalk.green("Sync result"));
       console.log(YAML.stringify(report, null, 2));
       // verify balances
-      const truelayerBalance = await truelayer.getBalance(truelayerAccount)
+      const truelayerBalance = await truelayer.getBalance(truelayerAccount);
       const actualBalance = await actual.getBalance(actualAccount.id);
       const sign = truelayerAccount.type === "CARD" ? -1 : 1;
       if (truelayerBalance?.current === (actualBalance / 100) * sign)

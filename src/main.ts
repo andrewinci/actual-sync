@@ -103,7 +103,6 @@ truelayerCommand.command("add-account").action(async () => {
     },
   });
   console.log(chalk.green("Account added and auth setup"));
-
 });
 truelayerCommand.command("list-accounts").action(async () => {
   const config = await loadConfig();

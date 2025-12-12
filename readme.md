@@ -4,11 +4,17 @@
 
 A minimal command-line tool that automatically syncs bank transactions from various financial providers directly into [Actual Budget](https://actualbudget.org/). Keep the budget up-to-date without manual data entry!
 
+## ✨ Features
+
+- 🔄 **Automatic Transaction Sync** - Import transactions from supported banks
+- 🏦 **Multi-Bank Support** - Connect multiple accounts from different providers
+- 📊 **Flexible Account Mapping** - Configure how accounts sync to Actual Budget
+- 🐋 **Docker Ready** - Easy deployment and containerization
 
 ## 🏦 Supported Providers
 
 - **[TrueLayer](https://truelayer.com/)** - Connect to 300+ banks across UK and Europe
-- **T212** wip
+- **Trading 212** - *Coming soon*
 
 ## 🚀 Quick Start
 
@@ -27,6 +33,14 @@ git clone https://github.com/andrewinci/actual-sync.git
 cd actual-sync
 pnpm install
 pnpm run build
+```
+
+#### Using Docker
+
+```bash
+git clone https://github.com/andrewinci/actual-sync.git
+cd actual-sync
+docker build -t actual-sync .
 ```
 
 ## 📖 Usage
@@ -75,6 +89,19 @@ pnpm run build
     ```bash
     ./actual-sync sync
     ```
+
+## 📋 Command Reference
+
+| Command | Description |
+|---------|-------------|
+| `config create` | Create a default configuration file |
+| `actual list-accounts` | List all Actual Budget accounts |
+| `truelayer add-account` | Add TrueLayer bank accounts via OAuth |
+| `truelayer list-accounts` | List configured TrueLayer accounts |
+| `truelayer list-transactions <accountId>` | View transactions for a specific account |
+| `truelayer get-balance <accountId>` | Check balance for a specific account |
+| `sync` | Synchronize all configured accounts |
+
 ## 📄 Configuration File Reference
 ```yaml
 actual:

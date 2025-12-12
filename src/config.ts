@@ -27,7 +27,7 @@ const DEFAULT_CONFIG: AppConfig = {
   },
 };
 
-const CONFIG_FILE_NAME = ".config.yml";
+const CONFIG_FILE_NAME = process.env.CONFIG_FILE_PATH ?? ".config.yml";
 
 export const loadConfig = async (): Promise<AppConfig> => {
   const config: AppConfig = await readFile(CONFIG_FILE_NAME)

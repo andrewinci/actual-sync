@@ -1,0 +1,4 @@
+.config.yml
+.cache/
+node_modules/
+actual-sync

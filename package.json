@@ -3,25 +3,27 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "scripts": {
-    "start": "ts-node ./src/main.ts",
-    "pretty": "prettier --write ."
-  },
   "keywords": [],
   "author": "",
-  "license": "ISC",
-  "packageManager": "pnpm@10.25.0",
-  "devDependencies": {
-    "@types/node": "^24.10.1",
-    "prettier": "^3.7.4",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.9.3"
+  "scripts": {
+    "dev": "ts-node ./src/main.ts",
+    "pretty": "prettier --write .",
+    "build": "esbuild ./src/main.ts --bundle --platform=node --outfile=actual-sync"
   },
+  "license": "MIT",
+  "packageManager": "pnpm@10.25.0",
   "dependencies": {
     "@actual-app/api": "^25.12.0",
     "chalk": "^5.6.2",
     "commander": "^14.0.2",
     "inquirer": "^13.0.2",
     "yaml": "^2.8.2"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "esbuild": "^0.27.1",
+    "prettier": "^3.7.4",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
   }
 }

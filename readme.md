@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A minimal command-line tool that automatically syncs bank transactions from various financial providers directly into [Actual Budget](https://actualbudget.org/). Keep the budget up-to-date without manual data entry!
+A minimal command-line tool that automatically syncs bank transactions from various financial providers directly into [Actual Budget](https://actualbudget.org/).
 
 ## ✨ Features
 
@@ -14,7 +14,7 @@ A minimal command-line tool that automatically syncs bank transactions from vari
 ## 🏦 Supported Providers
 
 - **[TrueLayer](https://truelayer.com/)** - Connect to 300+ banks across UK and Europe
-- **Trading 212** - *Coming soon*
+- **Trading 212** - _Coming soon_
 
 ## 🚀 Quick Start
 
@@ -50,68 +50,72 @@ docker build -t actual-sync .
 ## 📖 Usage
 
 1. **Create a configuration file**:
+
    ```bash
    ./actual-sync config create
    ```
 
 2. **Edit the generated `.config.yml`** with your credentials:
+
    ```yaml
    actual:
      password: "your-actual-password"
-     syncId: "your-sync-id"  # Found in Actual Settings > Advanced
-     url: "https://your-actual-server.com"  # or "localhost" for local
+     syncId: "your-sync-id" # Found in Actual Settings > Advanced
+     url: "https://your-actual-server.com" # or "localhost" for local
      cacheDir: ".cache/"
-   
+
    truelayer:
      redirectUri: "https://console.truelayer.com/redirect-page"
      clientId: "your-truelayer-client-id"
      clientSecret: "your-truelayer-client-secret"
    ```
+
 3. **Add Truelayer accounts following the wizard**
-    ```bash
-    ./actual-sync truelayer add-account
-    ```
+   ```bash
+   ./actual-sync truelayer add-account
+   ```
 4. **List the Actual budget accounts**
-    ```bash
-    ./actual-sync actual list-accounts
-    ```
+   ```bash
+   ./actual-sync actual list-accounts
+   ```
 5. **List the Truelayer accounts**
-    ```bash
-    ./actual-sync truelayer list-accounts
-    ```
+   ```bash
+   ./actual-sync truelayer list-accounts
+   ```
 6. **Add sync configurations**
-    ```yaml
-    sync:
-      map:
-        - name: Amex
-          truelayerAccountId: truelayer-sample-id-amex
-          actualAccountId: actual-budget-sample-account-id-amex
-          mapConfig:
-            invertAmount: true
-    ```
+   ```yaml
+   sync:
+     map:
+       - name: Amex
+         truelayerAccountId: truelayer-sample-id-amex
+         actualAccountId: actual-budget-sample-account-id-amex
+         mapConfig:
+           invertAmount: true
+   ```
 7. **Run sync**
-    ```bash
-    ./actual-sync sync
-    ```
+   ```bash
+   ./actual-sync sync
+   ```
 
 ## 📋 Command Reference
 
-| Command | Description |
-|---------|-------------|
-| `config create` | Create a default configuration file |
-| `actual list-accounts` | List all Actual Budget accounts |
-| `truelayer add-account` | Add TrueLayer bank accounts via OAuth |
-| `truelayer list-accounts` | List configured TrueLayer accounts |
+| Command                                   | Description                              |
+| ----------------------------------------- | ---------------------------------------- |
+| `config create`                           | Create a default configuration file      |
+| `actual list-accounts`                    | List all Actual Budget accounts          |
+| `truelayer add-account`                   | Add TrueLayer bank accounts via OAuth    |
+| `truelayer list-accounts`                 | List configured TrueLayer accounts       |
 | `truelayer list-transactions <accountId>` | View transactions for a specific account |
-| `truelayer get-balance <accountId>` | Check balance for a specific account |
-| `sync` | Synchronize all configured accounts |
+| `truelayer get-balance <accountId>`       | Check balance for a specific account     |
+| `sync`                                    | Synchronize all configured accounts      |
 
 ## 📄 Configuration File Reference
+
 ```yaml
 actual:
   password: "your-actual-password"
-  syncId: "your-sync-id"  # Found in Actual Settings > Advanced
-  url: "https://your-actual-server.com"  # or "localhost" for local
+  syncId: "your-sync-id" # Found in Actual Settings > Advanced
+  url: "https://your-actual-server.com" # or "localhost" for local
   cacheDir: ".cache/"
 truelayer:
   redirectUri: "https://console.truelayer.com/redirect-page" #no need to change this uri
@@ -205,7 +209,6 @@ docker run -e CONFIG_FILE_PATH=/config/.config.yml \
   -v ${PWD}/:/config/ \
   ghcr.io/andrewinci/actual-sync:latest sync
 ```
-
 
 ## 📝 License
 

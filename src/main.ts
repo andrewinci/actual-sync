@@ -94,23 +94,16 @@ truelayerCommand.command("config").action(async () => {
 truelayerCommand.command("add-account").action(async () => {
   const config = await loadConfig();
   const truelayer = Truelayer(config.truelayer);
-  const account = await truelayer.addAccount();
-  const accountAlreadyExists = config.truelayer.accounts.find(
-    (a) => a.id == account.id,
-  );
-  if (!accountAlreadyExists) {
-    await writeConfig({
-      ...config,
-      truelayer: {
-        ...config.truelayer,
-        accounts: [...config.truelayer.accounts, account],
-      },
-    });
-    console.log(account);
-    console.log(chalk.green("Account added and auth setup"));
-  } else {
-    console.log(chalk.red("Account already exists"));
-  }
+  const accounts = await truelayer.addAccounts();
+  await writeConfig({
+    ...config,
+    truelayer: {
+      ...config.truelayer,
+      accounts: [...config.truelayer.accounts, ...accounts],
+    },
+  });
+  console.log(chalk.green("Account added and auth setup"));
+
 });
 truelayerCommand.command("list-accounts").action(async () => {
   const config = await loadConfig();

@@ -63,7 +63,7 @@ export const Actual = (config: ActualConfig) => {
         added: (res.added as []).length,
         updated: (res.updated as []).length,
         updatedPreview: (res.updatedPreview as []).length,
-      }
+      };
     } finally {
       await api.shutdown();
     }

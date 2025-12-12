@@ -11,8 +11,8 @@ export type TruelayerConfig = {
 export type TruelayerBankAccount = {
   id: string;
   name: string;
-  network: string;
   refreshToken: string;
+  type: "CARD" | "ACCOUNT";
 };
 
 type TokenResponse = {
@@ -21,13 +21,11 @@ type TokenResponse = {
 };
 
 type CardsResponse = {
-  results: [
-    {
-      display_name: string;
-      account_id: string;
-      card_network: string;
-    },
-  ];
+  results: {
+    display_name: string;
+    account_id: string;
+    card_network: string;
+  }[];
   status: "Succeeded";
 };
 
@@ -116,39 +114,57 @@ export const Truelayer = (config: TruelayerConfig) => {
     };
   };
   // account
-  const listAccounts = () => {
-    return config.accounts;
-  };
-  const getCardInfo = async (accessToken: string) => {
-    const resp = await fetch(new URL(`data/v1/cards/`, BASE_URL_API), {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${accessToken}`,
+  const listAccounts = () => config.accounts;
+
+  const getInfo = async (
+    accessToken: string,
+    isCard: boolean,
+  ): Promise<Omit<TruelayerBankAccount, "refreshToken">[]> => {
+    const resp = await fetch(
+      new URL(isCard ? `data/v1/cards/` : `data/v1/accounts/`, BASE_URL_API),
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
       },
-    });
+    );
     const body = (await resp.json()) as CardsResponse;
-    if (body.results.length != 1) throw new Error("Only one result expected");
     return body.results.map((c) => ({
       id: c.account_id,
       name: c.display_name,
       network: c.card_network,
-    }))[0]!;
+      type: isCard ? "CARD" : "ACCOUNT",
+    }));
   };
-  const addAccount = async (): Promise<TruelayerBankAccount> => {
+
+  const addAccounts = async (): Promise<TruelayerBankAccount[]> => {
     const code = await getAuthCode();
     const creds = await swapCodeForTokens(code);
-    const card = await getCardInfo(creds.accessToken);
-    return {
-      id: card.id,
-      name: card.name,
-      network: card.network,
+    // truelayer has different endpoints for cards and accounts
+    // that we want to hide here. e.g. Monzo is an account, Amex is a card
+    let accounts = await getInfo(creds.accessToken, true);
+    if (accounts.length === 0)
+      accounts = await getInfo(creds.accessToken, false);
+    if (accounts.length === 0)
+      throw new Error("Unable to retrieve the account info");
+    return accounts.map((a) => ({
+      id: a.id,
+      name: a.name,
+      type: a.type,
       refreshToken: creds.refreshToken,
-    };
+    }));
   };
+
   const getTransactions = async (account: TruelayerBankAccount) => {
     const creds = await refreshToken(account.refreshToken);
     const resp = await fetch(
-      new URL(`/data/v1/cards/${account.id}/transactions`, BASE_URL_API),
+      new URL(
+        account.type === "CARD"
+          ? `/data/v1/cards/${account.id}/transactions`
+          : `/data/v1/accounts/${account.id}/transactions`,
+        BASE_URL_API,
+      ),
       {
         headers: {
           "Content-Type": "application/json",
@@ -159,10 +175,16 @@ export const Truelayer = (config: TruelayerConfig) => {
     const body = (await resp.json()) as TransactionsResponse;
     return body.results;
   };
+
   const getBalance = async (account: TruelayerBankAccount) => {
     const creds = await refreshToken(account.refreshToken);
     const resp = await fetch(
-      new URL(`/data/v1/cards/${account.id}/balance`, BASE_URL_API),
+      new URL(
+        account.type === "CARD"
+          ? `/data/v1/cards/${account.id}/balance`
+          : `/data/v1/accounts/${account.id}/balance`,
+        BASE_URL_API,
+      ),
       {
         headers: {
           "Content-Type": "application/json",
@@ -172,5 +194,5 @@ export const Truelayer = (config: TruelayerConfig) => {
     );
     return await resp.json();
   };
-  return { addAccount, getTransactions, getBalance, listAccounts };
+  return { addAccounts, getTransactions, getBalance, listAccounts };
 };

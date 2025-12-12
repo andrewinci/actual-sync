@@ -2,10 +2,11 @@ import chalk from "chalk";
 import { Actual, ActualTransaction } from "./actual";
 import { AppConfig } from "./config";
 import { Truelayer, TruelayerTransaction } from "./truelayer";
+import * as YAML from "yaml";
 
 export type SyncConfig = {
   map: {
-    name: string,
+    name: string;
     truelayerAccountId: string;
     actualAccountId: string;
     mapConfig: { invertAmount?: boolean };
@@ -17,7 +18,6 @@ export const Sync = (config: AppConfig) => {
     tx: TruelayerTransaction,
     accountId: string,
     mapConfig: { invertAmount?: boolean },
-
   ): ActualTransaction => {
     const date = new Date(tx.timestamp);
     const yyyy = date.getFullYear();
@@ -31,7 +31,7 @@ export const Sync = (config: AppConfig) => {
       notes: tx.description,
       imported_id: tx.transaction_id,
       payee_name: tx.meta.provider_merchant_name,
-      cleared: false
+      cleared: false,
     };
   };
 
@@ -41,9 +41,15 @@ export const Sync = (config: AppConfig) => {
     const actualAccounts = await actual.listAccounts();
     const truelayerAccounts = truelayer.listAccounts();
     for (var syncConfig of config.sync.map) {
-      console.log(chalk.bold.bgYellow(`\nSync transactions for ${syncConfig.name}`));
-      const actualAccount = actualAccounts.find((a) => a.id === syncConfig.actualAccountId);
-      const truelayerAccount = truelayerAccounts.find((a) => a.id === syncConfig.truelayerAccountId);
+      console.log(
+        chalk.bold.bgYellow(`\nSync transactions for ${syncConfig.name}`),
+      );
+      const actualAccount = actualAccounts.find(
+        (a) => a.id === syncConfig.actualAccountId,
+      );
+      const truelayerAccount = truelayerAccounts.find(
+        (a) => a.id === syncConfig.truelayerAccountId,
+      );
       if (!actualAccount)
         throw new Error(
           `Actual account id ${syncConfig.actualAccountId} not found. Check your sync config`,
@@ -57,8 +63,14 @@ export const Sync = (config: AppConfig) => {
       const actualTransactions = truelayerTransactions.map((t) =>
         mapTx(t, syncConfig.actualAccountId, syncConfig.mapConfig),
       );
-      const report = await actual.loadTransactions(syncConfig.actualAccountId, actualTransactions);
-      console.log(chalk.green(JSON.stringify(report, null, 2)));
+      const report = await actual.loadTransactions(
+        syncConfig.actualAccountId,
+        actualTransactions,
+      );
+      console.log(YAML.stringify(report, null, 2));
+      console.log(chalk.green("Balance"));
+      const balance = await truelayer.getBalance(truelayerAccount);
+      console.log(YAML.stringify(balance, null, 2));
     }
   };
 

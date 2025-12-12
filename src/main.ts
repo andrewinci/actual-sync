@@ -3,50 +3,22 @@
 import { program } from "commander";
 import chalk from "chalk";
 import inquirer from "inquirer";
-import { loadConfig, writeConfig } from "./config";
+import * as YAML from "yaml";
+import { loadConfig, createConfig } from "./config";
 import { Actual } from "./actual";
 import { Truelayer } from "./truelayer";
 import { Sync } from "./sync";
 
 program.version("1.0.0").description("TA sync - Truelayer to Actual sync");
 
+// Config 
+program.command("config").command("create").action(() => {
+  inquirer
+    .prompt({ type: 'confirm', name: "confirm", message: 'Create default config file? (if a file exists it will be overwritten)' })
+    .then(({ confirm }) => { if (confirm) createConfig() })
+})
 // Actual
 const actualCommand = program.command("actual");
-actualCommand.command("config").action(async () => {
-  const config = await loadConfig();
-  const actualConfig = config.actual;
-  inquirer
-    .prompt([
-      {
-        type: "input",
-        name: "url",
-        default: actualConfig.url,
-        message: "Actual server url",
-      },
-      {
-        type: "input",
-        name: "password",
-        default: actualConfig.password,
-        message: "Actual server password",
-      },
-      {
-        type: "input",
-        name: "syncId",
-        default: actualConfig.syncId,
-        message: "Actual syncId",
-      },
-      {
-        type: "input",
-        name: "cacheDir",
-        default: actualConfig.cacheDir,
-        message: "Local dir for cache",
-      },
-    ])
-    .then(async (answers) => {
-      await writeConfig({ ...config, actual: answers });
-      console.log(chalk.green("Actual configuration updated"));
-    });
-});
 actualCommand.command("list-accounts").action(async () => {
   const config = await loadConfig();
   const actual = Actual(config.actual);
@@ -56,58 +28,17 @@ actualCommand.command("list-accounts").action(async () => {
 
 // Truelayer
 const truelayerCommand = program.command("truelayer");
-truelayerCommand.command("config").action(async () => {
-  const config = await loadConfig();
-  const actualConfig = config.truelayer;
-  inquirer
-    .prompt([
-      {
-        type: "input",
-        name: "clientId",
-        default: actualConfig.clientId,
-        message: "Truelayer app clientID",
-      },
-      {
-        type: "input",
-        name: "clientSecret",
-        default: actualConfig.clientSecret,
-        message: "Truelayer app clientSecret",
-      },
-      {
-        type: "input",
-        name: "redirectUri",
-        default: actualConfig.redirectUri,
-        message: "Truelayer app redirect uri",
-      },
-      {
-        type: "input",
-        name: "cacheDir",
-        default: actualConfig.cacheDir,
-        message: "Local dir for cache",
-      },
-    ])
-    .then(async (answers) => {
-      await writeConfig({ ...config, truelayer: { ...answers, accounts: [] } });
-      console.log(chalk.green("Truelayer configuration updated"));
-    });
-});
 truelayerCommand.command("add-account").action(async () => {
   const config = await loadConfig();
   const truelayer = Truelayer(config.truelayer);
   const accounts = await truelayer.addAccounts();
-  await writeConfig({
-    ...config,
-    truelayer: {
-      ...config.truelayer,
-      accounts: [...config.truelayer.accounts, ...accounts],
-    },
-  });
-  console.log(chalk.green("Account added and auth setup"));
+  console.log(chalk.green("Update your truelayer config with the following accounts"));
+  console.log(YAML.stringify(accounts));
 });
 truelayerCommand.command("list-accounts").action(async () => {
   const config = await loadConfig();
   const truelayer = Truelayer(config.truelayer);
-  console.log(JSON.stringify(truelayer.listAccounts(), null, 2));
+  console.log(YAML.stringify(truelayer.listAccounts(), null, 2));
 });
 truelayerCommand
   .command("list-transactions")
@@ -118,7 +49,7 @@ truelayerCommand
     if (account) {
       const truelayer = Truelayer(config.truelayer);
       const transactions = await truelayer.getTransactions(account);
-      console.log(JSON.stringify(transactions, null, 2));
+      console.log(YAML.stringify(transactions, null, 2));
     } else {
       console.log(
         chalk.red(

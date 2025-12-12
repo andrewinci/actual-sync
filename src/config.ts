@@ -11,16 +11,16 @@ export type AppConfig = {
 };
 const DEFAULT_CONFIG: AppConfig = {
   actual: {
-    password: "",
-    syncId: "",
+    password: "<actual password>",
+    syncId: "<sync id from https://..../settings >",
     url: "localhost",
     cacheDir: ".cache/actual/",
   },
   truelayer: {
     redirectUri: "https://console.truelayer.com/redirect-page",
     cacheDir: ".cache/truelayer/",
-    clientId: "",
-    clientSecret: "",
+    clientId: "<truelayer app clientID>",
+    clientSecret: "<truelayer app secretId>",
     accounts: [],
   },
   sync: {
@@ -41,11 +41,6 @@ export const loadConfig = async (): Promise<AppConfig> => {
     sync: { ...DEFAULT_CONFIG.sync, ...config?.sync },
   };
 };
-
-export const writeConfig = async (config: AppConfig) => {
-  console.log("Update your config file as follow");
-  console.log(stringify(config));
-  // return writeFile(CONFIG_FILE_NAME, stringify(config)).catch((err) =>
-  //     console.error(err),
-  // );
-};
+export const createConfig = async () => writeFile(CONFIG_FILE_NAME, stringify(DEFAULT_CONFIG)).catch((err) =>
+  console.error(err),
+);

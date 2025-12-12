@@ -33,7 +33,7 @@ actualCommand.command("list-accounts").action(async () => {
   const config = await loadConfig();
   const actual = Actual(config.actual);
   const accounts = await actual.listAccounts();
-  console.log(JSON.stringify(accounts, null, 2));
+  console.log(YAML.stringify(accounts, null, 2));
 });
 
 // Truelayer

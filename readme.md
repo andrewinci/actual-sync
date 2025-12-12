@@ -38,6 +38,10 @@ pnpm run build
 #### Using Docker
 
 ```bash
+# Use pre-built image from GitHub Container Registry
+docker pull ghcr.io/andrewinci/actual-sync:latest
+
+# Or build locally
 git clone https://github.com/andrewinci/actual-sync.git
 cd actual-sync
 docker build -t actual-sync .
@@ -164,7 +168,19 @@ pnpm install
 
 ## 🐳 Docker
 
-### Build
+Docker images are automatically built and published to GitHub Container Registry on every release.
+
+### Pre-built Images
+
+```bash
+# Pull the latest image
+docker pull ghcr.io/andrewinci/actual-sync:latest
+
+# Pull a specific version
+docker pull ghcr.io/andrewinci/actual-sync:v1.0.0
+```
+
+### Build Locally
 
 ```bash
 docker build -t actual-sync .
@@ -173,9 +189,21 @@ docker build -t actual-sync .
 ### Run
 
 ```bash
+# Use pre-built image from GitHub Container Registry
 docker run -e CONFIG_FILE_PATH=/config/.config.yml \
   -v ${PWD}/:/config/ \
-  actual-sync [command]
+  ghcr.io/andrewinci/actual-sync:latest [command]
+
+# Examples:
+# List accounts
+docker run -e CONFIG_FILE_PATH=/config/.config.yml \
+  -v ${PWD}/:/config/ \
+  ghcr.io/andrewinci/actual-sync:latest actual list-accounts
+
+# Run sync
+docker run -e CONFIG_FILE_PATH=/config/.config.yml \
+  -v ${PWD}/:/config/ \
+  ghcr.io/andrewinci/actual-sync:latest sync
 ```
 
 

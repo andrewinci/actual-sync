@@ -9,7 +9,7 @@ import { Actual } from "./actual";
 import { Truelayer } from "./truelayer";
 import { Sync } from "./sync";
 
-program.version("1.0.0").description("TA sync - Truelayer to Actual sync");
+program.version("1.0.0").description("Actual sync");
 
 // Config
 program

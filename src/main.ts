@@ -54,7 +54,7 @@ actualCommand.command("list-accounts").action(async () => {
   console.log(JSON.stringify(accounts, null, 2));
 });
 
-// True layer
+// Truelayer
 const truelayerCommand = program.command("truelayer");
 truelayerCommand.command("config").action(async () => {
   const config = await loadConfig();

@@ -3,11 +3,13 @@ import { parse, stringify } from "yaml";
 import { TruelayerConfig } from "./truelayer";
 import { ActualConfig } from "./actual";
 import { SyncConfig } from "./sync";
+import { NtfyConfig } from "./ntfy";
 
 export type AppConfig = {
   actual: ActualConfig;
   truelayer: TruelayerConfig;
   sync: SyncConfig;
+  ntfy: NtfyConfig | null;
 };
 const DEFAULT_CONFIG: AppConfig = {
   actual: {
@@ -25,6 +27,7 @@ const DEFAULT_CONFIG: AppConfig = {
   sync: {
     map: [],
   },
+  ntfy: null,
 };
 
 const CONFIG_FILE_NAME = process.env.CONFIG_FILE_PATH ?? ".config.yml";
@@ -38,6 +41,7 @@ export const loadConfig = async (): Promise<AppConfig> => {
     actual: { ...DEFAULT_CONFIG.actual, ...config?.actual },
     truelayer: { ...DEFAULT_CONFIG.truelayer, ...config?.truelayer },
     sync: { ...DEFAULT_CONFIG.sync, ...config?.sync },
+    ntfy: config?.ntfy,
   };
 };
 export const createConfig = async () =>

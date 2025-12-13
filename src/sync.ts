@@ -3,6 +3,7 @@ import { Actual, ActualTransaction } from "./actual";
 import { AppConfig } from "./config";
 import { Truelayer, TruelayerTransaction } from "./truelayer";
 import * as YAML from "yaml";
+import { Ntfy } from "./ntfy";
 
 export type SyncConfig = {
   map: {
@@ -40,6 +41,11 @@ export const Sync = (config: AppConfig) => {
     const truelayer = Truelayer(config.truelayer);
     const actualAccounts = await actual.listAccounts();
     const truelayerAccounts = truelayer.listAccounts();
+    let syncResult = {
+      accountSyncs: 0,
+      newTransactions: 0,
+      balanceMismatches: 0,
+    };
     for (var syncConfig of config.sync.map) {
       console.log(
         chalk.bold.bgYellow(`\nSync transactions for ${syncConfig.name}`),
@@ -73,15 +79,30 @@ export const Sync = (config: AppConfig) => {
       const truelayerBalance = await truelayer.getBalance(truelayerAccount);
       const actualBalance = await actual.getBalance(actualAccount.id);
       const sign = truelayerAccount.type === "CARD" ? -1 : 1;
+      syncResult.newTransactions += report.added;
       if (truelayerBalance?.current === (actualBalance / 100) * sign)
         console.log(chalk.green(`Account balances match`));
       else {
+        syncResult.balanceMismatches += 1;
         console.log(chalk.red(`Account balances DO NOT match`));
         console.log(chalk.green("\nOnline balance"));
         console.log(YAML.stringify(truelayerBalance, null, 2));
         console.log(chalk.green("\nActual balance"));
         console.log(actualBalance / 100);
       }
+      syncResult.accountSyncs += 1;
+    }
+    if (config.ntfy) {
+      const title =
+        syncResult.balanceMismatches > 0
+          ? "Actual sync requires attention"
+          : "Actual sync import completed";
+      await Ntfy(config.ntfy).post({
+        title,
+        body: `Number of accounts updated: ${syncResult.accountSyncs}
+        Number of transactions added: ${syncResult.newTransactions}
+        Number of mismatched accounts: ${syncResult.balanceMismatches}`,
+      });
     }
   };
 

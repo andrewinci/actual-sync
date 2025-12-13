@@ -161,6 +161,7 @@ sync:
 The easiest way to deploy actual-sync to Kubernetes is using the included Helm chart. The deployment creates a CronJob that automatically syncs your bank transactions every 4 hours.
 
 #### Prerequisites
+
 - Kubernetes cluster
 - Helm 3.x installed
 - A `.config.yml` file with your credentials
@@ -168,6 +169,7 @@ The easiest way to deploy actual-sync to Kubernetes is using the included Helm c
 #### Installation
 
 1. **Deploy using your local configuration file:**
+
    ```bash
    # Create namespace and install with your config
    helm upgrade --install actual-sync ./helm \

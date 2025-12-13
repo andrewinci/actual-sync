@@ -36,5 +36,6 @@ config:
       accounts: []
     sync:
       map: []
+
 # Optional: use existing configMap
 # existingConfigMap: my-existing-configmap

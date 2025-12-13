@@ -9,6 +9,7 @@ A minimal command-line tool that automatically syncs bank transactions from vari
 - 🔄 **Automatic Transaction Sync** - Import transactions from supported banks
 - 🏦 **Multi-Bank Support** - Connect multiple accounts from different providers
 - 📊 **Flexible Account Mapping** - Configure how accounts sync to Actual Budget
+- 🔔 **Notifications** - Optional ntfy integration for sync status notifications
 - 🐋 **Docker Ready** - Easy deployment and containerization
 
 ## 🏦 Supported Providers
@@ -152,7 +153,38 @@ sync:
       truelayerAccountId: truelayer-sample-id-starling
       actualAccountId: actual-budget-sample-account-id-starling
       mapConfig: {}
+# Optional: Get notifications via ntfy (https://ntfy.sh)
+ntfy:
+  url: "https://ntfy.sh" # or your self-hosted ntfy server
+  topic: "your-topic-name" # choose a unique topic name
 ```
+
+## 🔔 Notifications
+
+Actual-sync supports optional notifications via [ntfy](https://ntfy.sh) to keep you informed about sync status.
+
+### Configuration
+
+Add the `ntfy` section to your `.config.yml`:
+
+```yaml
+ntfy:
+  url: "https://ntfy.sh" # or your self-hosted ntfy server URL
+  topic: "your-unique-topic-name" # choose a unique topic name
+```
+
+### Features
+
+- **Automatic notifications** after each sync run
+- **Status icons**: ✅ for successful syncs, ⚠️ when attention is required
+- **Detailed information**: Number of accounts synced, transactions added, and balance mismatches
+- **Free service**: Use the public ntfy.sh or self-host your own instance
+
+To receive notifications:
+
+1. Subscribe to your topic using the [ntfy mobile app](https://ntfy.sh/docs/subscribe/phone/) or [web interface](https://ntfy.sh)
+2. Configure the `ntfy` section in your config file
+3. Run `./actual-sync sync` and you'll receive notifications about the sync status
 
 ## 🚀 Deployment
 

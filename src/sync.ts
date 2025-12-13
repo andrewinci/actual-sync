@@ -93,15 +93,17 @@ export const Sync = (config: AppConfig) => {
       syncResult.accountSyncs += 1;
     }
     if (config.ntfy) {
-      const title =
-        syncResult.balanceMismatches > 0
-          ? "Actual sync requires attention"
-          : "Actual sync import completed";
+      const hasIssues = syncResult.balanceMismatches > 0;
+      const title = hasIssues
+        ? "Actual sync requires attention"
+        : "Actual sync import completed";
+      const tags = hasIssues ? ["warning"] : ["white_check_mark"];
       await Ntfy(config.ntfy).post({
         title,
         body: `Number of accounts updated: ${syncResult.accountSyncs}
-        Number of transactions added: ${syncResult.newTransactions}
-        Number of mismatched accounts: ${syncResult.balanceMismatches}`,
+Number of transactions added: ${syncResult.newTransactions}
+Number of mismatched accounts: ${syncResult.balanceMismatches}`,
+        tags,
       });
     }
   };

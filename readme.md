@@ -76,6 +76,7 @@ docker build -t actual-sync .
      accounts:
        - id: "trading212-invest"
          name: "Trading212 Invest"
+         currency: "GBP" # Optional, defaults to GBP
    ```
 
 3. **Add Truelayer accounts following the wizard** (for bank accounts)
@@ -167,6 +168,7 @@ trading212:
   accounts:
     - id: "trading212-invest"
       name: "Trading212 Invest"
+      currency: "GBP" # Optional, defaults to GBP. Use EUR, USD, etc. as needed
 sync:
   # manually create the map below to match provider accounts to actual
   map:

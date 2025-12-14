@@ -6,6 +6,7 @@ export type Trading212Config = {
 export type Trading212Account = {
   id: string;
   name: string;
+  currency?: string; // Optional, defaults to GBP
 };
 
 export type Trading212Balance = {
@@ -22,6 +23,7 @@ export const Trading212 = (config: Trading212Config) => {
     const resp = await fetch(new URL(path, BASE_URL_API), {
       headers: {
         "Content-Type": "application/json",
+        // Trading212 API uses the API key directly in the Authorization header
         Authorization: config.apiKey,
       },
     });
@@ -52,7 +54,7 @@ export const Trading212 = (config: Trading212Config) => {
     // Return the total value (invested + free cash)
     return {
       total: data.total,
-      currency: "GBP", // Trading212 default, could be made configurable
+      currency: account.currency || "GBP", // Use account currency or default to GBP
     };
   };
 

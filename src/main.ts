@@ -66,7 +66,7 @@ truelayerCommand
     } else {
       console.log(
         chalk.red(
-          "The account doesn't exists. Check the id and make sure the account is added first",
+          "The account doesn't exist. Check the id and make sure the account is added first",
         ),
       );
     }
@@ -85,7 +85,7 @@ truelayerCommand
     } else {
       console.log(
         chalk.red(
-          "The account doesn't exists. Check the id and make sure the account is added first",
+          "The account doesn't exist. Check the id and make sure the account is added first",
         ),
       );
     }
@@ -127,7 +127,7 @@ trading212Command
     } else {
       console.log(
         chalk.red(
-          "The account doesn't exists. Check the id and make sure the account is added first",
+          "The account doesn't exist. Check the id and make sure the account is added first",
         ),
       );
     }

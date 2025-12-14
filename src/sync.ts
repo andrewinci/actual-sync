@@ -133,7 +133,7 @@ export const Sync = (config: AppConfig) => {
             date: `${yyyy}-${mm}-${dd}`,
             amount: difference,
             notes: `Balance reconciliation - Trading212 account value adjustment`,
-            imported_id: `t212-reconcile-${yyyy}${mm}${dd}`,
+            imported_id: `t212-reconcile-${syncConfig.trading212AccountId}-${yyyy}${mm}${dd}`,
             payee_name: "Trading212 Balance Adjustment",
             cleared: true,
           };

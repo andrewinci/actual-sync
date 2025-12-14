@@ -15,7 +15,7 @@ A minimal command-line tool that automatically syncs bank transactions from vari
 ## 🏦 Supported Providers
 
 - **[TrueLayer](https://truelayer.com/)** - Connect to 300+ banks across UK and Europe
-- **Trading 212** - _Coming soon_
+- **[Trading 212](https://www.trading212.com/)** - Track investment account balances (API key required)
 
 ## 🚀 Quick Start
 
@@ -69,9 +69,16 @@ docker build -t actual-sync .
      redirectUri: "https://console.truelayer.com/redirect-page"
      clientId: "your-truelayer-client-id"
      clientSecret: "your-truelayer-client-secret"
+
+   # Optional: For Trading 212 support
+   trading212:
+     apiKey: "your-trading212-api-key"
+     accounts:
+       - id: "trading212-invest"
+         name: "Trading212 Invest"
    ```
 
-3. **Add Truelayer accounts following the wizard**
+3. **Add Truelayer accounts following the wizard** (for bank accounts)
    ```bash
    ./actual-sync truelayer add-account
    ```
@@ -83,17 +90,27 @@ docker build -t actual-sync .
    ```bash
    ./actual-sync truelayer list-accounts
    ```
-6. **Add sync configurations**
+6. **List the Trading212 accounts** (if configured)
+   ```bash
+   ./actual-sync trading212 list-accounts
+   ```
+7. **Add sync configurations**
    ```yaml
    sync:
      map:
+       # TrueLayer account example
        - name: Amex
          truelayerAccountId: truelayer-sample-id-amex
          actualAccountId: actual-budget-sample-account-id-amex
          mapConfig:
            invertAmount: true
+       # Trading212 account example
+       - name: Trading212 Invest
+         trading212AccountId: trading212-invest
+         actualAccountId: actual-budget-sample-account-id-trading212
+         mapConfig: {}
    ```
-7. **Run sync**
+8. **Run sync**
    ```bash
    ./actual-sync sync
    ```
@@ -107,7 +124,9 @@ docker build -t actual-sync .
 | `truelayer add-account`                   | Add TrueLayer bank accounts via OAuth    |
 | `truelayer list-accounts`                 | List configured TrueLayer accounts       |
 | `truelayer list-transactions <accountId>` | View transactions for a specific account |
-| `truelayer get-balance <accountId>`       | Check balance for a specific account     |
+| `truelayer get-balance <accountId>`       | Check balance for a TrueLayer account    |
+| `trading212 list-accounts`                | List configured Trading 212 accounts     |
+| `trading212 get-balance <accountId>`      | Check balance for a Trading 212 account  |
 | `sync`                                    | Synchronize all configured accounts      |
 
 ## 📄 Configuration File Reference
@@ -141,9 +160,17 @@ truelayer:
       name: Starling
       type: ACCOUNT
       refreshToken: ....
+# Optional: For Trading 212 support
+# Get your API key from Trading 212 Settings > API (Beta)
+trading212:
+  apiKey: "your-trading212-api-key"
+  accounts:
+    - id: "trading212-invest"
+      name: "Trading212 Invest"
 sync:
-  # manually create the map below to match truelayer accounts to actual
+  # manually create the map below to match provider accounts to actual
   map:
+    # TrueLayer account examples
     - name: Amex # set the name you prefer
       truelayerAccountId: truelayer-sample-id-amex
       actualAccountId: actual-budget-sample-account-id-amex
@@ -156,6 +183,11 @@ sync:
     - name: Starling
       truelayerAccountId: truelayer-sample-id-starling
       actualAccountId: actual-budget-sample-account-id-starling
+      mapConfig: {}
+    # Trading212 account example
+    - name: Trading212 Invest
+      trading212AccountId: trading212-invest
+      actualAccountId: actual-budget-sample-account-id-trading212
       mapConfig: {}
 ```
 
@@ -172,6 +204,26 @@ ntfy:
   url: "https://ntfy.sh" # or your self-hosted ntfy server URL
   topic: "your-unique-topic-name" # choose a topic name
 ```
+
+## 📈 Trading 212 Integration
+
+Trading 212 support works differently from TrueLayer. Instead of importing individual transactions, it creates reconciliation transactions to track your investment account values in Actual Budget.
+
+### How It Works
+
+- **Balance Tracking**: Fetches the current total value from your Trading 212 account
+- **Automatic Reconciliation**: Creates a single transaction to adjust your Actual Budget balance to match Trading 212
+- **Daily Updates**: Each sync creates a reconciliation entry for the current date if the balance differs
+
+### Setup
+
+1. **Get your API Key**: Log into Trading 212 → Settings → API (Beta) → Generate API Key
+2. **Add to config**: Update your `.config.yml` with the Trading 212 section (see Configuration File Reference)
+3. **Configure sync mapping**: Add your Trading 212 account to the sync map with `trading212AccountId`
+
+### Example Use Case
+
+Perfect for tracking investment portfolios in your budget without cluttering your transactions with every buy/sell order. You'll see the net change in your portfolio value as a single reconciliation entry.
 
 ## 🚀 Deployment
 

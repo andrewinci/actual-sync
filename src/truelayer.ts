@@ -87,7 +87,7 @@ export const Truelayer = (config: TruelayerConfig) => {
     type CardAccountResponse = {
       display_name: string;
       account_id: string;
-      card_network?: string;
+      card_network?: string; // Only present for cards, not for regular accounts
     };
     // truelayer has different endpoints for cards and accounts
     // that we want to hide here. e.g. Monzo is an account, Amex is a card

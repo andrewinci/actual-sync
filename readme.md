@@ -9,6 +9,7 @@ A minimal command-line tool that automatically syncs bank transactions from vari
 - 🔄 **Automatic Transaction Sync** - Import transactions from supported banks
 - 🏦 **Multi-Bank Support** - Connect multiple accounts from different providers
 - 📊 **Flexible Account Mapping** - Configure how accounts sync to Actual Budget
+- 🔔 **Notifications** - Optional ntfy integration for sync status notifications
 - 🐋 **Docker Ready** - Easy deployment and containerization
 
 ## 🏦 Supported Providers
@@ -117,6 +118,10 @@ actual:
   syncId: "your-sync-id" # Found in Actual Settings > Advanced
   url: "https://your-actual-server.com" # or "localhost" for local
   cacheDir: ".cache/"
+# Optional: Get notifications via ntfy (https://ntfy.sh)
+ntfy:
+  url: "https://ntfy.sh" # or your self-hosted ntfy server
+  topic: "your-topic-name" # choose a topic name
 truelayer:
   redirectUri: "https://console.truelayer.com/redirect-page" #no need to change this uri
   # you need a truelayer live app to get the below clientId and secret
@@ -152,6 +157,20 @@ sync:
       truelayerAccountId: truelayer-sample-id-starling
       actualAccountId: actual-budget-sample-account-id-starling
       mapConfig: {}
+```
+
+## 🔔 Notifications
+
+Actual-sync supports optional notifications via [ntfy](https://ntfy.sh) to keep you informed about sync status.
+
+### Configuration
+
+Add the `ntfy` section to your `.config.yml`:
+
+```yaml
+ntfy:
+  url: "https://ntfy.sh" # or your self-hosted ntfy server URL
+  topic: "your-unique-topic-name" # choose a topic name
 ```
 
 ## 🚀 Deployment

@@ -4,10 +4,12 @@ import { TruelayerConfig } from "./truelayer";
 import { ActualConfig } from "./actual";
 import { SyncConfig } from "./sync";
 import { NtfyConfig } from "./ntfy";
+import { Trading212Config } from "./trading212";
 
 export type AppConfig = {
   actual: ActualConfig;
   truelayer: TruelayerConfig;
+  trading212: Trading212Config | null;
   sync: SyncConfig;
   ntfy: NtfyConfig | null;
 };
@@ -24,6 +26,7 @@ const DEFAULT_CONFIG: AppConfig = {
     clientSecret: "<truelayer app secretId>",
     accounts: [],
   },
+  trading212: null,
   sync: {
     map: [],
   },
@@ -40,6 +43,7 @@ export const loadConfig = async (): Promise<AppConfig> => {
   return {
     actual: { ...DEFAULT_CONFIG.actual, ...config?.actual },
     truelayer: { ...DEFAULT_CONFIG.truelayer, ...config?.truelayer },
+    trading212: config?.trading212,
     sync: { ...DEFAULT_CONFIG.sync, ...config?.sync },
     ntfy: config?.ntfy,
   };

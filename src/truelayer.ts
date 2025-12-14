@@ -52,8 +52,10 @@ export const Truelayer = (config: TruelayerConfig) => {
     const code = await getAuthCode();
     const creds = await swapCodeForTokens(code);
     const accounts = await getInfo(creds);
-    if (accounts.length === 0)
+    if (accounts.length === 0) {
+      console.error("Get account info failed")
       throw new Error("Unable to retrieve the account info");
+    }
     return accounts.map((a) => ({
       id: a.id,
       name: a.name,
@@ -65,7 +67,7 @@ export const Truelayer = (config: TruelayerConfig) => {
   const truelayerApi = async <T>(
     path: string,
     opts: { refreshToken: string } | { accessToken: string },
-  ): Promise<TruelayerResponse<T>> => {
+  ): Promise<TruelayerResponse<T> | null> => {
     let accessToken = "";
     if ("accessToken" in opts) accessToken = opts.accessToken;
     else {
@@ -78,6 +80,7 @@ export const Truelayer = (config: TruelayerConfig) => {
         Authorization: `Bearer ${accessToken}`,
       },
     });
+    if (!resp.ok) return null;
     return (await resp.json()) as TruelayerResponse<T>;
   };
 
@@ -93,16 +96,16 @@ export const Truelayer = (config: TruelayerConfig) => {
     // that we want to hide here. e.g. Monzo is an account, Amex is a card
     let isCard = true;
     let data = await truelayerApi<CardAccountResponse>(`data/v1/cards/`, opts);
-    if (data.results.length === 0) {
+    if (!data || data.results.length === 0) {
       isCard = false;
       data = await truelayerApi<CardAccountResponse>(`data/v1/accounts/`, opts);
     }
-    return data.results.map((c) => ({
+    return data?.results.map((c) => ({
       id: c.account_id,
       name: c.display_name,
       network: c.card_network,
       type: isCard ? "CARD" : "ACCOUNT",
-    }));
+    })) ?? [];
   };
 
   const getTransactions = async (account: TruelayerBankAccount) => {
@@ -111,7 +114,7 @@ export const Truelayer = (config: TruelayerConfig) => {
         ? `/data/v1/cards/${account.id}/transactions`
         : `/data/v1/accounts/${account.id}/transactions`,
       account,
-    ).then((res) => res.results);
+    ).then((res) => res?.results ?? []);
   };
 
   const getBalance = async (account: TruelayerBankAccount) => {
@@ -121,7 +124,7 @@ export const Truelayer = (config: TruelayerConfig) => {
         : `/data/v1/accounts/${account.id}/balance`,
       account,
     );
-    if (data.results.length !== 1)
+    if (!data || data.results.length !== 1)
       throw Error("Only one budget per account expected");
     return data.results[0];
   };

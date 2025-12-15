@@ -100,9 +100,9 @@ export const Sync = (config: AppConfig) => {
       const tags = hasIssues ? ["warning"] : ["white_check_mark"];
       await Ntfy(config.ntfy).post({
         title,
-        body: `Number of accounts synced: ${syncResult.accountSyncs}
+        body: `Number of accounts updated: ${syncResult.accountSyncs}
 Number of transactions added: ${syncResult.newTransactions}
-Number of balance mismatches: ${syncResult.balanceMismatches}`,
+Number of mismatched accounts: ${syncResult.balanceMismatches}`,
         tags,
       });
     }

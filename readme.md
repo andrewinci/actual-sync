@@ -157,6 +157,10 @@ sync:
       truelayerAccountId: truelayer-sample-id-starling
       actualAccountId: actual-budget-sample-account-id-starling
       mapConfig: {}
+# Optional: Get notifications via ntfy (https://ntfy.sh)
+ntfy:
+  url: "https://ntfy.sh" # or your self-hosted ntfy server
+  topic: "your-topic-name" # choose a unique topic name
 ```
 
 ## 🔔 Notifications

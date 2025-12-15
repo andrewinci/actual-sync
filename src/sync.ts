@@ -93,18 +93,34 @@ export const Sync = (config: AppConfig) => {
       syncResult.accountSyncs += 1;
     }
     if (config.ntfy) {
+      console.log(chalk.blue('\n📱 Sending notification...'));
       const hasIssues = syncResult.balanceMismatches > 0;
       const title = hasIssues
-        ? "Actual sync requires attention"
-        : "Actual sync import completed";
-      const tags = hasIssues ? ["warning"] : ["white_check_mark"];
-      await Ntfy(config.ntfy).post({
-        title,
-        body: `Number of accounts synced: ${syncResult.accountSyncs}
-Number of transactions added: ${syncResult.newTransactions}
-Number of balance mismatches: ${syncResult.balanceMismatches}`,
-        tags,
-      });
+        ? "Actual Sync - Issues Detected"
+        : "Actual Sync Completed";
+      const tags = hasIssues ? ["warning", "bank"] : ["white_check_mark", "bank"];
+      
+      const body = [
+        `Sync Summary`,
+        `- Accounts synced: ${syncResult.accountSyncs}`,
+        `- New transactions: ${syncResult.newTransactions}`,
+        `- Balance mismatches: ${syncResult.balanceMismatches}`,
+        '',
+        hasIssues 
+          ? 'Some accounts have balance mismatches that may need attention.' 
+          : 'All accounts synced successfully with matching balances!'
+      ].join('\n');
+      
+      try {
+        await Ntfy(config.ntfy).post({
+          title,
+          body,
+          tags,
+          priority: hasIssues ? 'high' : 'default'
+        });
+      } catch (error) {
+        console.error(chalk.red('Failed to send notification:'), error);
+      }
     }
   };
 

@@ -3,10 +3,10 @@
 image:
   repository: ghcr.io/andrewinci/actual-sync
   tag: latest
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
 
 cronjob:
-  schedule: "0 */4 * * *"
+  schedule: "0 0 * * *"
   timeZone: UTC
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 3

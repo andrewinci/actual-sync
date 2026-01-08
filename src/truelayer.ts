@@ -23,7 +23,8 @@ export type TruelayerTransaction = {
   provider_transaction_id?: string;
   normalised_provider_transaction_id?: string;
   meta: {
-    provider_merchant_name: string;
+    provider_merchant_name?: string;
+    counter_party_preferred_name?: string;
     address: string;
     transaction_type: string;
     provider_reference?: string;
@@ -53,7 +54,7 @@ export const Truelayer = (config: TruelayerConfig) => {
     const creds = await swapCodeForTokens(code);
     const accounts = await getInfo(creds);
     if (accounts.length === 0) {
-      console.error("Get account info failed")
+      console.error("Get account info failed");
       throw new Error("Unable to retrieve the account info");
     }
     return accounts.map((a) => ({
@@ -100,12 +101,14 @@ export const Truelayer = (config: TruelayerConfig) => {
       isCard = false;
       data = await truelayerApi<CardAccountResponse>(`data/v1/accounts/`, opts);
     }
-    return data?.results.map((c) => ({
-      id: c.account_id,
-      name: c.display_name,
-      network: c.card_network,
-      type: isCard ? "CARD" : "ACCOUNT",
-    })) ?? [];
+    return (
+      data?.results.map((c) => ({
+        id: c.account_id,
+        name: c.display_name,
+        network: c.card_network,
+        type: isCard ? "CARD" : "ACCOUNT",
+      })) ?? []
+    );
   };
 
   const getTransactions = async (account: TruelayerBankAccount) => {

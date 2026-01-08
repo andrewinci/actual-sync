@@ -31,7 +31,7 @@ export const Sync = (config: AppConfig) => {
       amount: (mapConfig.invertAmount ? -1 : +1) * Math.round(tx.amount * 100),
       notes: tx.description,
       imported_id: tx.transaction_id,
-      payee_name: tx.meta.provider_merchant_name,
+      payee_name: tx.meta.provider_merchant_name ?? tx.meta.counter_party_preferred_name ?? tx.description,
       cleared: false,
     };
   };

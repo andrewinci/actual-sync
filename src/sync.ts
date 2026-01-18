@@ -45,6 +45,7 @@ export const Sync = (config: AppConfig) => {
       accountSyncs: 0,
       newTransactions: 0,
       balanceMismatches: 0,
+      mismatchedBanks: [] as string[],
     };
     for (var syncConfig of config.sync.map) {
       console.log(
@@ -58,14 +59,16 @@ export const Sync = (config: AppConfig) => {
       );
       if (!actualAccount)
         throw new Error(
-          `Actual account id ${syncConfig.actualAccountId} not found. Check your sync config`,
+          `Actual account id ${syncConfig.actualAccountId} not found for bank "${syncConfig.name}". Check your sync config`,
         );
       if (!truelayerAccount)
         throw new Error(
-          `Truelayer account id ${syncConfig.truelayerAccountId} not found. Check your sync config`,
+          `Truelayer account id ${syncConfig.truelayerAccountId} not found for bank "${syncConfig.name}". Check your sync config`,
         );
-      const truelayerTransactions =
-        await truelayer.getTransactions(truelayerAccount);
+      const truelayerTransactions = await truelayer.getTransactions(truelayerAccount)
+        .catch(error => {
+          throw new Error(`Failed to get transactions for bank "${syncConfig.name}": ${error.message || error}`);
+        });
       const actualTransactions = truelayerTransactions.map((t) =>
         mapTx(t, syncConfig.actualAccountId, syncConfig.mapConfig),
       );
@@ -76,7 +79,10 @@ export const Sync = (config: AppConfig) => {
       console.log(chalk.green("Sync result"));
       console.log(YAML.stringify(report, null, 2));
       // verify balances
-      const truelayerBalance = await truelayer.getBalance(truelayerAccount);
+      const truelayerBalance = await truelayer.getBalance(truelayerAccount)
+        .catch(error => {
+          throw new Error(`Failed to get balance for bank "${syncConfig.name}": ${error.message || error}`);
+        });
       const actualBalance = await actual.getBalance(actualAccount.id);
       const sign = truelayerAccount.type === "CARD" ? -1 : 1;
       syncResult.newTransactions += report.added;
@@ -84,6 +90,7 @@ export const Sync = (config: AppConfig) => {
         console.log(chalk.green(`Account balances match`));
       else {
         syncResult.balanceMismatches += 1;
+        syncResult.mismatchedBanks.push(syncConfig.name);
         console.log(chalk.red(`Account balances DO NOT match`));
         console.log(chalk.green("\nOnline balance"));
         console.log(YAML.stringify(truelayerBalance, null, 2));
@@ -107,7 +114,7 @@ export const Sync = (config: AppConfig) => {
         `- Balance mismatches: ${syncResult.balanceMismatches}`,
         '',
         hasIssues 
-          ? 'Some accounts have balance mismatches that may need attention.' 
+          ? `Balance mismatches detected in: ${syncResult.mismatchedBanks.join(', ')}` 
           : 'All accounts synced successfully with matching balances!'
       ].join('\n');
       

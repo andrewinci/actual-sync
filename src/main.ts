@@ -92,6 +92,27 @@ truelayerCommand
 
 program.command("sync").action(async () => {
   const config = await loadConfig();
-  await Sync(config).sync();
+  try {
+    await Sync(config).sync();
+  } catch (error) {
+    console.error(chalk.red('❌ Sync failed:'), error);
+    
+    // Send error notification if ntfy is configured
+    if (config.ntfy) {
+      try {
+        const { Ntfy } = await import('./ntfy');
+        await Ntfy(config.ntfy).post({
+          title: 'Actual Sync - Error',
+          body: `Sync failed with error:\n${error instanceof Error ? error.message : String(error)}`,
+          tags: ['x', 'bank', 'error'],
+          priority: 'high'
+        });
+      } catch (notifyError) {
+        console.error(chalk.red('Failed to send error notification:'), notifyError);
+      }
+    }
+    
+    process.exit(1);
+  }
 });
 program.parse(process.argv);

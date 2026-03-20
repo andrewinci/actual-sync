@@ -1,7 +1,11 @@
 import chalk from "chalk";
 import { Actual, ActualTransaction } from "./actual";
 import { AppConfig } from "./config";
-import { Truelayer, TruelayerTransaction } from "./truelayer";
+import {
+  Truelayer,
+  TruelayerConnectionExpiredError,
+  TruelayerTransaction,
+} from "./truelayer";
 import * as YAML from "yaml";
 import { Ntfy } from "./ntfy";
 
@@ -31,7 +35,10 @@ export const Sync = (config: AppConfig) => {
       amount: (mapConfig.invertAmount ? -1 : +1) * Math.round(tx.amount * 100),
       notes: tx.description,
       imported_id: tx.transaction_id,
-      payee_name: tx.meta.provider_merchant_name ?? tx.meta.counter_party_preferred_name ?? tx.description,
+      payee_name:
+        tx.meta.provider_merchant_name ??
+        tx.meta.counter_party_preferred_name ??
+        tx.description,
       cleared: false,
     };
   };
@@ -65,9 +72,14 @@ export const Sync = (config: AppConfig) => {
         throw new Error(
           `Truelayer account id ${syncConfig.truelayerAccountId} not found for bank "${syncConfig.name}". Check your sync config`,
         );
-      const truelayerTransactions = await truelayer.getTransactions(truelayerAccount)
-        .catch(error => {
-          throw new Error(`Failed to get transactions for bank "${syncConfig.name}": ${error.message || error}`);
+      const truelayerTransactions = await truelayer
+        .getTransactions(truelayerAccount)
+        .catch((error) => {
+          if (error instanceof TruelayerConnectionExpiredError)
+            throw new TruelayerConnectionExpiredError(syncConfig.name);
+          throw new Error(
+            `Failed to get transactions for bank "${syncConfig.name}": ${error.message || error}`,
+          );
         });
       const actualTransactions = truelayerTransactions.map((t) =>
         mapTx(t, syncConfig.actualAccountId, syncConfig.mapConfig),
@@ -79,9 +91,14 @@ export const Sync = (config: AppConfig) => {
       console.log(chalk.green("Sync result"));
       console.log(YAML.stringify(report, null, 2));
       // verify balances
-      const truelayerBalance = await truelayer.getBalance(truelayerAccount)
-        .catch(error => {
-          throw new Error(`Failed to get balance for bank "${syncConfig.name}": ${error.message || error}`);
+      const truelayerBalance = await truelayer
+        .getBalance(truelayerAccount)
+        .catch((error) => {
+          if (error instanceof TruelayerConnectionExpiredError)
+            throw new TruelayerConnectionExpiredError(syncConfig.name);
+          throw new Error(
+            `Failed to get balance for bank "${syncConfig.name}": ${error.message || error}`,
+          );
         });
       const actualBalance = await actual.getBalance(actualAccount.id);
       const sign = truelayerAccount.type === "CARD" ? -1 : 1;
@@ -100,33 +117,35 @@ export const Sync = (config: AppConfig) => {
       syncResult.accountSyncs += 1;
     }
     if (config.ntfy) {
-      console.log(chalk.blue('\n📱 Sending notification...'));
+      console.log(chalk.blue("\n📱 Sending notification..."));
       const hasIssues = syncResult.balanceMismatches > 0;
       const title = hasIssues
         ? "Actual Sync - Issues Detected"
         : "Actual Sync Completed";
-      const tags = hasIssues ? ["warning", "bank"] : ["white_check_mark", "bank"];
-      
+      const tags = hasIssues
+        ? ["warning", "bank"]
+        : ["white_check_mark", "bank"];
+
       const body = [
         `Sync Summary`,
         `- Accounts synced: ${syncResult.accountSyncs}`,
         `- New transactions: ${syncResult.newTransactions}`,
         `- Balance mismatches: ${syncResult.balanceMismatches}`,
-        '',
-        hasIssues 
-          ? `Balance mismatches detected in: ${syncResult.mismatchedBanks.join(', ')}` 
-          : 'All accounts synced successfully with matching balances!'
-      ].join('\n');
-      
+        "",
+        hasIssues
+          ? `Balance mismatches detected in: ${syncResult.mismatchedBanks.join(", ")}`
+          : "All accounts synced successfully with matching balances!",
+      ].join("\n");
+
       try {
         await Ntfy(config.ntfy).post({
           title,
           body,
           tags,
-          priority: hasIssues ? 'high' : 'default'
+          priority: hasIssues ? "high" : "default",
         });
       } catch (error) {
-        console.error(chalk.red('Failed to send notification:'), error);
+        console.error(chalk.red("Failed to send notification:"), error);
       }
     }
   };

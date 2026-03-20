@@ -1,3 +1,14 @@
+export class TruelayerConnectionExpiredError extends Error {
+  constructor(accountName?: string) {
+    const target = accountName ? ` for "${accountName}"` : "";
+    super(
+      `The connection to the bank${target} has expired. ` +
+        `Please re-authenticate by running: truelayer add-account`,
+    );
+    this.name = "TruelayerConnectionExpiredError";
+  }
+}
+
 export type TruelayerConfig = {
   clientId: string;
   clientSecret: string;
@@ -81,7 +92,12 @@ export const Truelayer = (config: TruelayerConfig) => {
         Authorization: `Bearer ${accessToken}`,
       },
     });
-    if (!resp.ok) return null;
+    if (!resp.ok) {
+      if (resp.status === 401 || resp.status === 403) {
+        throw new TruelayerConnectionExpiredError();
+      }
+      return null;
+    }
     return (await resp.json()) as TruelayerResponse<T>;
   };
 
@@ -128,7 +144,7 @@ export const Truelayer = (config: TruelayerConfig) => {
       account,
     );
     if (!data || data.results.length !== 1)
-      throw Error("Only one budget per account expected");
+      throw Error("Only one balance per account expected");
     return data.results[0];
   };
   return { addAccounts, getTransactions, getBalance, listAccounts };
@@ -188,6 +204,21 @@ const TruelayerAuth = (config: TruelayerConfig) => {
         refresh_token: refreshToken,
       }),
     });
+    if (!resp.ok) {
+      const body = await resp.text();
+      if (
+        resp.status === 400 ||
+        resp.status === 401 ||
+        body.includes("invalid_grant") ||
+        body.includes("token_expired") ||
+        body.includes("consent")
+      ) {
+        throw new TruelayerConnectionExpiredError();
+      }
+      throw new Error(
+        `Failed to refresh TrueLayer token (HTTP ${resp.status}): ${body}`,
+      );
+    }
     const data = (await resp.json()) as TokenResponse;
     return {
       accessToken: data.access_token,

@@ -29,48 +29,44 @@ export type ActualTransaction = {
   cleared?: boolean;
 };
 
-export const Actual = (config: ActualConfig) => {
-  const safeActualFn = async <T>(fn: () => T) => {
-    try {
-      // setup
-      await mkdir(config.cacheDir, { recursive: true });
-      await api.init({
-        dataDir: config.cacheDir,
-        serverURL: config.url,
-        password: config.password,
-        verbose: false,
-      });
-      await api.downloadBudget(config.syncId);
-      // client api call
-      return fn();
-    } finally {
-      await api.shutdown();
-    }
-  };
+/** Open a session to the Actual Budget API.
+ * The session initialises and downloads the budget once.
+ * Call `shutdown()` when done to sync and close the budget. */
+export const openActualSession = async (config: ActualConfig) => {
+  await mkdir(config.cacheDir, { recursive: true });
+  await api.init({
+    dataDir: config.cacheDir,
+    serverURL: config.url,
+    password: config.password,
+    verbose: false,
+  });
+  await api.downloadBudget(config.syncId);
 
-  const listAccounts = () =>
-    safeActualFn(async () => {
-      const accounts = await api.getAccounts();
-      return accounts.map((a) => ({ name: a.name, id: a.id }));
-    });
+  const listAccounts = async () => {
+    const accounts = await api.getAccounts();
+    return accounts.map((a) => ({ name: a.name, id: a.id }));
+  };
 
   const loadTransactions = async (
     accountId: string,
     txs: ActualTransaction[],
-  ) =>
-    safeActualFn(async () => {
-      const res = await api.importTransactions(accountId, txs);
-      return {
-        errors: (res.errors as []).length,
-        added: (res.added as []).length,
-        updated: (res.updated as []).length,
-        updatedPreview: (res.updatedPreview as []).length,
-      };
-    });
+  ) => {
+    const res = await api.importTransactions(accountId, txs);
+    return {
+      errors: (res.errors as []).length,
+      added: (res.added as []).length,
+      updated: (res.updated as []).length,
+      updatedPreview: (res.updatedPreview as []).length,
+    };
+  };
 
-  const getBalance = async (accountId: string) =>
-    safeActualFn(async () => {
-      return await api.getAccountBalance(accountId);
-    });
-  return { listAccounts, loadTransactions, getBalance };
+  const getBalance = async (accountId: string) => {
+    return await api.getAccountBalance(accountId);
+  };
+
+  const shutdown = async () => {
+    await api.shutdown();
+  };
+
+  return { listAccounts, loadTransactions, getBalance, shutdown };
 };

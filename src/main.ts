@@ -5,7 +5,7 @@ import chalk from "chalk";
 import inquirer from "inquirer";
 import * as YAML from "yaml";
 import { loadConfig, createConfig } from "./config";
-import { Actual } from "./actual";
+import { openActualSession } from "./actual";
 import { Truelayer } from "./truelayer";
 import { Sync } from "./sync";
 
@@ -31,9 +31,13 @@ program
 const actualCommand = program.command("actual");
 actualCommand.command("list-accounts").action(async () => {
   const config = await loadConfig();
-  const actual = Actual(config.actual);
-  const accounts = await actual.listAccounts();
-  console.log(YAML.stringify(accounts, null, 2));
+  const actual = await openActualSession(config.actual);
+  try {
+    const accounts = await actual.listAccounts();
+    console.log(YAML.stringify(accounts, null, 2));
+  } finally {
+    await actual.shutdown();
+  }
 });
 
 // Truelayer
@@ -95,23 +99,26 @@ program.command("sync").action(async () => {
   try {
     await Sync(config).sync();
   } catch (error) {
-    console.error(chalk.red('❌ Sync failed:'), error);
-    
+    console.error(chalk.red("❌ Sync failed:"), error);
+
     // Send error notification if ntfy is configured
     if (config.ntfy) {
       try {
-        const { Ntfy } = await import('./ntfy');
+        const { Ntfy } = await import("./ntfy");
         await Ntfy(config.ntfy).post({
-          title: 'Actual Sync - Error',
-          body: `Sync failed with error:\n${error instanceof Error ? error.message : String(error)}`,
-          tags: ['x', 'bank', 'error'],
-          priority: 'high'
+          title: "Actual Sync - Error",
+          body: `Sync failed with error:\n${error instanceof Error ? error.message : JSON.stringify(error)}`,
+          tags: ["x", "bank", "error"],
+          priority: "high",
         });
       } catch (notifyError) {
-        console.error(chalk.red('Failed to send error notification:'), notifyError);
+        console.error(
+          chalk.red("Failed to send error notification:"),
+          notifyError,
+        );
       }
     }
-    
+
     process.exit(1);
   }
 });

@@ -15,7 +15,7 @@ const DEFAULT_CONFIG: AppConfig = {
   actual: {
     password: "<actual password>",
     syncId: "<sync id from https://..../settings >",
-    url: "localhost",
+    url: "http://localhost:5006",
     cacheDir: ".cache/",
   },
   truelayer: {

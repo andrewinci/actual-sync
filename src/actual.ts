@@ -29,17 +29,33 @@ export type ActualTransaction = {
   cleared?: boolean;
 };
 
+/** Normalize a server URL by ensuring it has an http/https protocol prefix. */
+const normalizeUrl = (url: string): string => {
+  if (/^https?:\/\//i.test(url)) return url;
+  console.warn(
+    `Warning: Actual server URL "${url}" has no protocol — assuming "http://". Set a full URL (e.g. "http://${url}") in your config to suppress this warning.`,
+  );
+  return `http://${url}`;
+};
+
 /** Open a session to the Actual Budget API.
  * The session initialises and downloads the budget once.
  * Call `shutdown()` when done to sync and close the budget. */
 export const openActualSession = async (config: ActualConfig) => {
+  const serverURL = normalizeUrl(config.url);
   await mkdir(config.cacheDir, { recursive: true });
-  await api.init({
-    dataDir: config.cacheDir,
-    serverURL: config.url,
-    password: config.password,
-    verbose: false,
-  });
+  try {
+    await api.init({
+      dataDir: config.cacheDir,
+      serverURL,
+      password: config.password,
+      verbose: false,
+    });
+  } catch (err) {
+    throw new Error(
+      `Failed to connect to Actual server at "${serverURL}": ${err instanceof Error ? err.message : err}. Check the "actual.url" and "actual.password" values in your config.`,
+    );
+  }
   await api.downloadBudget(config.syncId);
 
   const listAccounts = async () => {

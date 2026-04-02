@@ -34,8 +34,32 @@ const CONFIG_FILE_NAME = process.env.CONFIG_FILE_PATH ?? ".config.yml";
 
 export const loadConfig = async (): Promise<AppConfig> => {
   const config: AppConfig = await readFile(CONFIG_FILE_NAME)
-    .then((d) => parse(d.toString()))
-    .catch(() => DEFAULT_CONFIG);
+    .then((d) => {
+      try {
+        return parse(d.toString());
+      } catch (err) {
+        console.error(
+          `Error: Failed to parse config file "${CONFIG_FILE_NAME}": ${err instanceof Error ? err.message : err}`,
+        );
+        console.error(
+          'Run "actual-sync config create" to generate a default config file.',
+        );
+        process.exit(1);
+      }
+    })
+    .catch((err: NodeJS.ErrnoException) => {
+      if (err.code === "ENOENT") {
+        console.error(`Error: Config file "${CONFIG_FILE_NAME}" not found.`);
+        console.error(
+          'Run "actual-sync config create" to generate a default config file.',
+        );
+      } else {
+        console.error(
+          `Error: Could not read config file "${CONFIG_FILE_NAME}": ${err.message}`,
+        );
+      }
+      process.exit(1);
+    });
   // merge with default
   return {
     actual: { ...DEFAULT_CONFIG.actual, ...config?.actual },
